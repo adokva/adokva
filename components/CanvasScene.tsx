@@ -13,7 +13,12 @@ export default function CanvasScene() {
         position: [0, 0, 5],
       }}
     >
-      <ambientLight intensity={1} />
+      <ambientLight intensity={0.15} />
+
+<directionalLight
+  position={[5, 3, 5]}
+  intensity={2}
+/>
 
       <Globe />
       <Clouds />

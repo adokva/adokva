@@ -7,9 +7,7 @@ import { useFrame, useTexture } from "@react-three/fiber";
 export default function Globe() {
   const globe = useRef<Mesh>(null);
 
-  const earthTexture = useTexture(
-    "/textures/earth.jpg"
-  );
+  const earthTexture = useTexture("/textures/earth.jpg");
 
   useFrame(() => {
     if (globe.current) {
@@ -19,9 +17,7 @@ export default function Globe() {
 
   return (
     <mesh ref={globe}>
-      <sphereGeometry
-        args={[1.5, 64, 64]}
-      />
+      <sphereGeometry args={[1.5, 64, 64]} />
 
       <meshStandardMaterial
         map={earthTexture}

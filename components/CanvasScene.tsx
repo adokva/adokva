@@ -25,12 +25,15 @@ export default function CanvasScene() {
       <NightLights />
       <Clouds />
 <Atmosphere />
-      <Stars
- 
-        radius={100}
-        depth={50}
-        count={5000}
-      />
+     <Stars
+  radius={120}
+  depth={60}
+  count={8000}
+  factor={4}
+  saturation={0}
+  fade
+  speed={0.2}
+/>
 
      <OrbitControls
   enableZoom={true}

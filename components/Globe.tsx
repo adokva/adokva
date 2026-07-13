@@ -2,10 +2,14 @@
 
 import { useRef } from "react";
 import { Mesh } from "three";
-import { useFrame } from "@react-three/fiber";
+import { useFrame, useTexture } from "@react-three/fiber";
 
 export default function Globe() {
   const globe = useRef<Mesh>(null);
+
+  const earthTexture = useTexture(
+    "/textures/earth.jpg"
+  );
 
   useFrame(() => {
     if (globe.current) {
@@ -20,8 +24,8 @@ export default function Globe() {
       />
 
       <meshStandardMaterial
-        color="#1d8cff"
-        roughness={0.8}
+        map={earthTexture}
+        roughness={1}
       />
     </mesh>
   );

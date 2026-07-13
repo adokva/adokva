@@ -6,6 +6,7 @@ import { OrbitControls, Stars } from "@react-three/drei";
 import Globe from "./Globe";
 import Clouds from "./Clouds";
 import Atmosphere from "./Atmosphere";
+import NightLights from "./NightLights";
 export default function CanvasScene() {
   return (
     <Canvas
@@ -21,6 +22,7 @@ export default function CanvasScene() {
 />
 
       <Globe />
+      <NightLights />
       <Clouds />
 <Atmosphere />
       <Stars

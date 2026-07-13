@@ -1,13 +1,19 @@
+import Globe from "../components/Globe";
+
 export default function Home() {
   return (
     <main>
-      <h1>
-        Adokva 🌍
-      </h1>
+      <Globe />
 
-      <p>
-        3D planet exploration begins.
-      </p>
+      <div>
+        <h1>
+          Adokva 🌍
+        </h1>
+
+        <p>
+          3D planet exploration begins.
+        </p>
+      </div>
     </main>
   );
 }

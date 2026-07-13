@@ -31,7 +31,12 @@ export default function CanvasScene() {
         count={5000}
       />
 
-      <OrbitControls />
+     <OrbitControls
+  enableZoom={true}
+  enablePan={false}
+  autoRotate={true}
+  autoRotateSpeed={0.4}
+/>
     </Canvas>
   );
 }

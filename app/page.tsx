@@ -1,10 +1,20 @@
-import Scene from "../components/Scene";
-import UI from "../components/UI";
+"use client";
+
+import CanvasScene from "@/components/CanvasScene";
+import UI from "@/components/UI";
 
 export default function Home() {
   return (
-    <main>
-      <Scene />
+    <main
+      style={{
+        width: "100vw",
+        height: "100vh",
+        overflow: "hidden",
+        background: "black",
+      }}
+    >
+      <CanvasScene />
+
       <UI />
     </main>
   );

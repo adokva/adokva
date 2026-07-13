@@ -26,6 +26,7 @@ export default function CanvasScene() {
       <Clouds />
 <Atmosphere />
       <Stars
+ 
         radius={100}
         depth={50}
         count={5000}

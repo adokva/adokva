@@ -4,7 +4,7 @@ import { Canvas } from "@react-three/fiber";
 import { OrbitControls, Stars } from "@react-three/drei";
 
 import Globe from "./Globe";
-
+import Atmosphere from "./Atmosphere";
 export default function CanvasScene() {
   return (
     <Canvas
@@ -15,7 +15,7 @@ export default function CanvasScene() {
       <ambientLight intensity={1} />
 
       <Globe />
-
+<Atmosphere />
       <Stars
         radius={100}
         depth={50}

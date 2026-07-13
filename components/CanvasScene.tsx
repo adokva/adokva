@@ -21,7 +21,7 @@ export default function CanvasScene() {
   intensity={2}
 />
 
-      <Globe />
+      <Globe></Globe>
       <NightLights />
       <Clouds />
 <Atmosphere />

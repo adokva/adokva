@@ -20,8 +20,10 @@ export default function Globe() {
       <sphereGeometry args={[1.5, 64, 64]} />
 
       <meshStandardMaterial
-        map={earthTexture}
-        roughness={1}
+  map={earthTexture}
+  roughness={0.8}
+  metalness={0.1}
+/>
       />
     </mesh>
   );

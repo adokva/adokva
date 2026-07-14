@@ -24,7 +24,6 @@ export default function Globe() {
   roughness={0.8}
   metalness={0.1}
 />
-      />
     </mesh>
   );
 }

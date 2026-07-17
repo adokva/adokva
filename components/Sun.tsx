@@ -63,27 +63,27 @@ function createSoftGlowTexture() {
 
   gradient.addColorStop(
     0,
-    "rgba(255,255,235,1)"
+    "rgba(255,255,240,1)"
   );
 
   gradient.addColorStop(
-    0.16,
-    "rgba(255,232,145,0.92)"
+    0.12,
+    "rgba(255,236,160,0.94)"
   );
 
   gradient.addColorStop(
-    0.34,
-    "rgba(255,173,70,0.48)"
+    0.28,
+    "rgba(255,178,75,0.46)"
   );
 
   gradient.addColorStop(
-    0.58,
-    "rgba(255,110,30,0.16)"
+    0.48,
+    "rgba(255,118,35,0.14)"
   );
 
   gradient.addColorStop(
-    0.8,
-    "rgba(255,75,15,0.035)"
+    0.72,
+    "rgba(255,80,20,0.03)"
   );
 
   gradient.addColorStop(
@@ -114,7 +114,10 @@ function createSoftGlowTexture() {
   return texture;
 }
 
-function createCoronaTexture() {
+function createCoronaTexture(
+  seedOffset: number,
+  strandCount: number
+) {
   const canvas =
     document.createElement(
       "canvas"
@@ -138,52 +141,126 @@ function createCoronaTexture() {
     center
   );
 
-  const innerRadius = 190;
+  /*
+    Внутреннее мягкое сияние
+    вокруг солнечного диска.
+  */
+
+  const innerGlow =
+    context.createRadialGradient(
+      0,
+      0,
+      175,
+      0,
+      0,
+      330
+    );
+
+  innerGlow.addColorStop(
+    0,
+    "rgba(255,245,195,0.28)"
+  );
+
+  innerGlow.addColorStop(
+    0.22,
+    "rgba(255,192,95,0.16)"
+  );
+
+  innerGlow.addColorStop(
+    0.58,
+    "rgba(255,115,40,0.045)"
+  );
+
+  innerGlow.addColorStop(
+    1,
+    "rgba(255,70,15,0)"
+  );
+
+  context.fillStyle =
+    innerGlow;
+
+  context.beginPath();
+
+  context.arc(
+    0,
+    0,
+    350,
+    0,
+    Math.PI * 2
+  );
+
+  context.fill();
+
+  /*
+    Неровные плазменные волокна.
+
+    Они рисуются кривыми,
+    а не прямыми лучами.
+  */
 
   for (
     let index = 0;
-    index < 460;
+    index < strandCount;
     index += 1
   ) {
-    const random =
+    const randomA =
       pseudoRandom(
-        index + 100
+        index +
+          seedOffset
       );
 
-    const secondRandom =
+    const randomB =
       pseudoRandom(
-        index + 900
+        index +
+          seedOffset +
+          1100
       );
 
-    const thirdRandom =
+    const randomC =
       pseudoRandom(
-        index + 1800
+        index +
+          seedOffset +
+          2300
+      );
+
+    const randomD =
+      pseudoRandom(
+        index +
+          seedOffset +
+          3700
       );
 
     const angle =
-      (index / 460) *
+      (index /
+        strandCount) *
         Math.PI *
         2 +
-      (random - 0.5) *
-        0.018;
+      (randomA - 0.5) *
+        0.085;
+
+    const startRadius =
+      188 +
+      randomB * 18;
 
     const length =
-      36 +
+      34 +
       Math.pow(
-        random,
-        2.1
+        randomC,
+        2.15
       ) *
-        185;
+        245;
+
+    const bend =
+      -32 +
+      randomD * 64;
 
     const width =
-      0.35 +
-      secondRandom *
-        1.6;
+      0.28 +
+      randomB * 1.55;
 
     const alpha =
-      0.018 +
-      thirdRandom *
-        0.075;
+      0.012 +
+      randomA * 0.052;
 
     context.save();
 
@@ -191,45 +268,67 @@ function createCoronaTexture() {
 
     const gradient =
       context.createLinearGradient(
-        innerRadius,
+        startRadius,
         0,
-        innerRadius + length,
+        startRadius +
+          length,
         0
       );
 
     gradient.addColorStop(
       0,
-      `rgba(255,242,175,${
-        alpha * 1.5
+      `rgba(255,244,185,${
+        alpha * 1.8
       })`
     );
 
     gradient.addColorStop(
       0.28,
-      `rgba(255,184,75,${alpha})`
+      `rgba(255,190,90,${
+        alpha * 1.2
+      })`
     );
 
     gradient.addColorStop(
-      0.7,
-      `rgba(255,105,25,${
-        alpha * 0.32
+      0.65,
+      `rgba(255,115,40,${
+        alpha * 0.45
       })`
     );
 
     gradient.addColorStop(
       1,
-      "rgba(255,75,10,0)"
+      "rgba(255,70,20,0)"
     );
 
-    context.fillStyle =
+    context.strokeStyle =
       gradient;
 
-    context.fillRect(
-      innerRadius,
-      -width / 2,
-      length,
-      width
+    context.lineWidth =
+      width;
+
+    context.beginPath();
+
+    context.moveTo(
+      startRadius,
+      0
     );
+
+    context.bezierCurveTo(
+      startRadius +
+        length * 0.23,
+      bend * 0.35,
+
+      startRadius +
+        length * 0.7,
+      bend,
+
+      startRadius +
+        length,
+      bend * 0.3
+    );
+
+    context.stroke();
 
     context.restore();
   }
@@ -273,43 +372,49 @@ function createProminenceTexture() {
 
   for (
     let index = 0;
-    index < 18;
+    index < 20;
     index += 1
   ) {
-    const random =
+    const randomA =
       pseudoRandom(
-        index + 2400
+        index + 2500
       );
 
-    const secondRandom =
+    const randomB =
       pseudoRandom(
-        index + 3400
+        index + 3500
       );
 
-    const thirdRandom =
+    const randomC =
       pseudoRandom(
-        index + 4400
+        index + 4500
+      );
+
+    const randomD =
+      pseudoRandom(
+        index + 5500
       );
 
     const angle =
-      random *
+      randomA *
       Math.PI *
       2;
 
     const startRadius =
-      206 +
-      secondRandom * 11;
+      202 +
+      randomB * 12;
 
     const height =
-      24 +
-      thirdRandom * 72;
+      22 +
+      Math.pow(
+        randomC,
+        1.4
+      ) *
+        88;
 
     const sideways =
-      -32 +
-      pseudoRandom(
-        index + 5400
-      ) *
-        64;
+      -38 +
+      randomD * 76;
 
     context.save();
 
@@ -325,25 +430,30 @@ function createProminenceTexture() {
 
     gradient.addColorStop(
       0,
-      "rgba(255,238,145,0.65)"
+      "rgba(255,245,180,0.68)"
     );
 
     gradient.addColorStop(
-      0.4,
-      "rgba(255,145,45,0.42)"
+      0.38,
+      "rgba(255,160,65,0.48)"
+    );
+
+    gradient.addColorStop(
+      0.72,
+      "rgba(255,95,25,0.2)"
     );
 
     gradient.addColorStop(
       1,
-      "rgba(255,75,15,0)"
+      "rgba(255,60,15,0)"
     );
 
     context.strokeStyle =
       gradient;
 
     context.lineWidth =
-      1 +
-      secondRandom * 2.2;
+      0.9 +
+      randomB * 2.4;
 
     context.beginPath();
 
@@ -359,7 +469,7 @@ function createProminenceTexture() {
 
       startRadius +
         height * 0.72,
-      sideways * 1.08,
+      sideways * 1.15,
 
       startRadius + height,
       0
@@ -421,21 +531,18 @@ function createCleanSunTexture(
     return sourceTexture.clone();
   }
 
-  /*
-    Берём центральную квадратную
-    часть NASA-фотографии.
-
-    Благодаря этому подписи,
-    служебные данные и края
-    исходного изображения
-    уходят за пределы кадра.
-  */
-
   const shortestSide =
     Math.min(
       sourceWidth,
       sourceHeight
     );
+
+  /*
+    Увеличенный центральный crop.
+
+    Он скрывает надписи NASA
+    и служебные края исходника.
+  */
 
   const cropSize =
     shortestSide * 0.82;
@@ -471,11 +578,9 @@ function createCleanSunTexture(
   );
 
   /*
-    Круглая маска с мягким краем.
-
-    Она полностью убирает
-    прямоугольную форму фотографии
-    и остатки чёрного фона.
+    Круглая маска убирает
+    прямоугольную фотографию
+    и чёрный фон.
   */
 
   context.globalCompositeOperation =
@@ -488,10 +593,10 @@ function createCleanSunTexture(
     context.createRadialGradient(
       center,
       center,
-      center * 0.83,
+      center * 0.82,
       center,
       center,
-      center * 0.985
+      center * 0.99
     );
 
   mask.addColorStop(
@@ -505,8 +610,8 @@ function createCleanSunTexture(
   );
 
   mask.addColorStop(
-    0.93,
-    "rgba(255,255,255,0.96)"
+    0.94,
+    "rgba(255,255,255,0.97)"
   );
 
   mask.addColorStop(
@@ -566,7 +671,10 @@ export default function Sun({
   const innerGlow =
     useRef<THREE.Sprite>(null);
 
-  const corona =
+  const coronaInner =
+    useRef<THREE.Sprite>(null);
+
+  const coronaOuter =
     useRef<THREE.Sprite>(null);
 
   const prominences =
@@ -597,10 +705,23 @@ export default function Sun({
       []
     );
 
-  const coronaTexture =
+  const coronaInnerTexture =
     useMemo(
       () =>
-        createCoronaTexture(),
+        createCoronaTexture(
+          800,
+          520
+        ),
+      []
+    );
+
+  const coronaOuterTexture =
+    useMemo(
+      () =>
+        createCoronaTexture(
+          6200,
+          340
+        ),
       []
     );
 
@@ -635,13 +756,15 @@ export default function Sun({
     return () => {
       cleanSunTexture.dispose();
       softGlowTexture.dispose();
-      coronaTexture.dispose();
+      coronaInnerTexture.dispose();
+      coronaOuterTexture.dispose();
       prominenceTexture.dispose();
     };
   }, [
     cleanSunTexture,
     softGlowTexture,
-    coronaTexture,
+    coronaInnerTexture,
+    coronaOuterTexture,
     prominenceTexture,
   ]);
 
@@ -659,14 +782,14 @@ export default function Sun({
     if (sunPhoto.current) {
       sunPhoto.current
         .material.rotation +=
-        delta * 0.0015;
+        delta * 0.0012;
 
       const size =
         0.96 +
         Math.sin(
-          time * 0.48
+          time * 0.46
         ) *
-          0.003;
+          0.0025;
 
       sunPhoto.current.scale.set(
         size,
@@ -677,11 +800,11 @@ export default function Sun({
 
     if (innerGlow.current) {
       const size =
-        1.14 +
+        1.13 +
         Math.sin(
-          time * 0.72
+          time * 0.76
         ) *
-          0.01;
+          0.008;
 
       innerGlow.current.scale.set(
         size,
@@ -690,19 +813,38 @@ export default function Sun({
       );
     }
 
-    if (corona.current) {
-      corona.current
+    if (coronaInner.current) {
+      coronaInner.current
         .material.rotation +=
-        delta * 0.00035;
+        delta * 0.001;
 
       const size =
-        2.18 +
+        2.06 +
         Math.sin(
           time * 0.34
         ) *
-          0.026;
+          0.022;
 
-      corona.current.scale.set(
+      coronaInner.current.scale.set(
+        size,
+        size,
+        1
+      );
+    }
+
+    if (coronaOuter.current) {
+      coronaOuter.current
+        .material.rotation -=
+        delta * 0.00045;
+
+      const size =
+        2.58 +
+        Math.sin(
+          time * 0.25
+        ) *
+          0.035;
+
+      coronaOuter.current.scale.set(
         size,
         size,
         1
@@ -711,15 +853,15 @@ export default function Sun({
 
     if (prominences.current) {
       prominences.current
-        .material.rotation -=
-        delta * 0.0008;
+        .material.rotation +=
+        delta * 0.0007;
 
       const size =
-        1.54 +
+        1.52 +
         Math.sin(
-          time * 0.4
+          time * 0.42
         ) *
-          0.018;
+          0.016;
 
       prominences.current.scale.set(
         size,
@@ -730,11 +872,11 @@ export default function Sun({
 
     if (distantGlow.current) {
       const size =
-        3.45 +
+        3.25 +
         Math.sin(
           time * 0.2
         ) *
-          0.035;
+          0.028;
 
       distantGlow.current.scale.set(
         size,
@@ -753,7 +895,7 @@ export default function Sun({
       ]}
     >
       <pointLight
-        color="#fff1c7"
+        color="#fff2cc"
         intensity={34}
         distance={45}
         decay={2}
@@ -762,24 +904,24 @@ export default function Sun({
       {/*
         Очень слабое дальнее сияние.
 
-        Оно больше не должно
-        заливать весь экран красным.
+        Оно не должно окрашивать
+        весь экран в красный цвет.
       */}
 
       <sprite
         ref={distantGlow}
         scale={[
-          3.45,
-          3.45,
+          3.25,
+          3.25,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
           map={softGlowTexture}
-          color="#ff9a45"
+          color="#ffad62"
           transparent
-          opacity={0.055}
+          opacity={0.038}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -790,26 +932,61 @@ export default function Sun({
       </sprite>
 
       {/*
-        Неровная тонкая корона.
+        Внешний слой короны.
 
-        Здесь больше нет длинных
-        одинаковых прямых лучей.
+        Более длинный,
+        слабый и неровный.
       */}
 
       <sprite
-        ref={corona}
+        ref={coronaOuter}
         scale={[
-          2.18,
-          2.18,
+          2.58,
+          2.58,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
-          map={coronaTexture}
-          color="#ffb24f"
+          map={
+            coronaOuterTexture
+          }
+          color="#ff9946"
           transparent
-          opacity={0.72}
+          opacity={0.34}
+          depthWrite={false}
+          depthTest={true}
+          toneMapped={false}
+          blending={
+            THREE.AdditiveBlending
+          }
+        />
+      </sprite>
+
+      {/*
+        Основной слой короны.
+
+        Волокна сделаны кривыми,
+        поэтому прямых графичных
+        лучей больше нет.
+      */}
+
+      <sprite
+        ref={coronaInner}
+        scale={[
+          2.06,
+          2.06,
+          1,
+        ]}
+        raycast={() => null}
+      >
+        <spriteMaterial
+          map={
+            coronaInnerTexture
+          }
+          color="#ffc066"
+          transparent
+          opacity={0.68}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -827,17 +1004,19 @@ export default function Sun({
       <sprite
         ref={prominences}
         scale={[
-          1.54,
-          1.54,
+          1.52,
+          1.52,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
-          map={prominenceTexture}
-          color="#ff9a3d"
+          map={
+            prominenceTexture
+          }
+          color="#ff9c42"
           transparent
-          opacity={0.7}
+          opacity={0.64}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -848,24 +1027,24 @@ export default function Sun({
       </sprite>
 
       {/*
-        Мягкое свечение непосредственно
-        вокруг солнечного диска.
+        Мягкое внутреннее свечение
+        вокруг фотографии Солнца.
       */}
 
       <sprite
         ref={innerGlow}
         scale={[
-          1.14,
-          1.14,
+          1.13,
+          1.13,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
           map={softGlowTexture}
-          color="#ffd07a"
+          color="#ffd681"
           transparent
-          opacity={0.2}
+          opacity={0.18}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -876,13 +1055,11 @@ export default function Sun({
       </sprite>
 
       {/*
-        Очищенная NASA-фотография.
+        Очищенная фотография NASA.
 
-        Центральный crop убирает
-        служебные надписи.
-
-        Круглая маска убирает
-        прямоугольник и чёрный фон.
+        Надписи и прямоугольный фон
+        скрыты центральным crop
+        и круглой маской.
       */}
 
       <sprite
@@ -910,11 +1087,10 @@ export default function Sun({
       </sprite>
 
       {/*
-        Невидимая кликабельная область.
+        Невидимая кликабельная сфера.
 
-        Перелёт камеры и кнопка
-        возврата продолжают работать
-        через прежний onSelect.
+        Первый клик приближает Солнце.
+        Повторный клик возвращает Землю.
       */}
 
       <mesh

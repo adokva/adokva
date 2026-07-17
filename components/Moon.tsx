@@ -98,14 +98,6 @@ export default function Moon({
       []
     );
 
-  /*
-    Настоящая текстура Луны.
-
-    Файл должен находиться здесь:
-
-    public/textures/moon.jpg
-  */
-
   const moonTexture =
     useLoader(
       THREE.TextureLoader,
@@ -128,18 +120,17 @@ export default function Moon({
       true;
   }, [moonTexture]);
 
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor =
+        "default";
+    };
+  }, []);
+
   useFrame((_, delta) => {
     if (!moon.current) {
       return;
     }
-
-    /*
-      Спокойное вращение Луны.
-
-      Вращение медленное,
-      чтобы поверхность можно
-      было внимательно рассмотреть.
-    */
 
     moon.current.rotation.y +=
       delta * 0.018;
@@ -150,9 +141,7 @@ export default function Moon({
       position={position}
     >
       {/*
-        =================================
-        НАСТОЯЩАЯ ПОВЕРХНОСТЬ ЛУНЫ
-        =================================
+        Настоящая поверхность Луны.
       */}
 
       <mesh
@@ -183,13 +172,7 @@ export default function Moon({
       </mesh>
 
       {/*
-        =================================
-        ТОНКИЙ ОТРАЖЁННЫЙ КРАЙ
-        =================================
-
-        Очень слабый слой,
-        чтобы Луна не выглядела
-        окружённой серым обручем.
+        Очень слабый отражённый край.
       */}
 
       <mesh
@@ -214,24 +197,20 @@ export default function Moon({
       </mesh>
 
       {/*
-        =================================
-        НЕВИДИМАЯ ЗОНА НАЖАТИЯ
-        =================================
+        Невидимая зона нажатия.
 
-        Она немного больше Луны,
-        поэтому по ней удобно нажимать
-        мышью и пальцем.
+        Здесь оставлен только
+        один обработчик нажатия.
+
+        Поэтому Луна больше
+        не получает двойной клик
+        и камера не дёргается.
       */}
 
       <mesh
         onPointerDown={(
           event
         ) => {
-          event.stopPropagation();
-
-          onSelect();
-        }}
-        onClick={(event) => {
           event.stopPropagation();
 
           onSelect();
@@ -244,7 +223,11 @@ export default function Moon({
           document.body.style.cursor =
             "pointer";
         }}
-        onPointerOut={() => {
+        onPointerOut={(
+          event
+        ) => {
+          event.stopPropagation();
+
           document.body.style.cursor =
             "default";
         }}

@@ -59,6 +59,36 @@ export default function Home() {
     selectedWorld !== null &&
     selectedWorld !== "earth";
 
+  const handleSelectWorld = (
+    world: SelectedWorld
+  ) => {
+    setSelectedPerson(null);
+    setSearchOpen(false);
+
+    /*
+      Повторное нажатие на уже
+      выбранный мир возвращает
+      камеру к Земле.
+
+      Пример:
+
+      Солнце → Солнце = Земля
+      Луна → Луна = Земля
+    */
+
+    setSelectedWorld(
+      (currentWorld) => {
+        if (
+          currentWorld === world
+        ) {
+          return "earth";
+        }
+
+        return world;
+      }
+    );
+  };
+
   return (
     <main
       style={{
@@ -98,21 +128,9 @@ export default function Home() {
         selectedWorld={
           selectedWorld
         }
-        onSelectWorld={(
-          world
-        ) => {
-          setSelectedPerson(
-            null
-          );
-
-          setSearchOpen(
-            false
-          );
-
-          setSelectedWorld(
-            world
-          );
-        }}
+        onSelectWorld={
+          handleSelectWorld
+        }
         onIntroComplete={() => {
           setIntroComplete(
             true
@@ -210,54 +228,6 @@ export default function Home() {
               );
             }}
           />
-        )}
-
-      {introComplete &&
-        exploringWorld && (
-          <button
-            onClick={() => {
-              setSelectedWorld(
-                "earth"
-              );
-            }}
-            style={{
-              position:
-                "fixed",
-
-              top: 24,
-              left: 24,
-
-              zIndex: 1200,
-
-              padding:
-                "12px 18px",
-
-              borderRadius:
-                999,
-
-              border:
-                "1px solid rgba(255,255,255,.22)",
-
-              background:
-                "rgba(8,12,20,.58)",
-
-              backdropFilter:
-                "blur(16px)",
-
-              color: "#fff",
-
-              fontSize: 14,
-              fontWeight: 700,
-
-              cursor:
-                "pointer",
-
-              boxShadow:
-                "0 12px 40px rgba(0,0,0,.35)",
-            }}
-          >
-            ← Вернуться к Земле
-          </button>
         )}
 
       {welcomeOpen && (

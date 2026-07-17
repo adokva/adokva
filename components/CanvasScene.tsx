@@ -101,20 +101,45 @@ export default function CanvasScene({
         }
       />
 
+      {/*
+        Первое нажатие:
+        перелёт к Солнцу.
+
+        Повторное нажатие:
+        возврат к Земле.
+
+        Переключение выполняется
+        в app/page.tsx.
+      */}
+
       <Sun
         onSelect={() => {
-          onSelectWorld("sun");
+          onSelectWorld(
+            "sun"
+          );
         }}
       />
 
+      {/*
+        Первое нажатие:
+        перелёт к Луне.
+
+        Повторное нажатие:
+        возврат к Земле.
+      */}
+
       <Moon
         onSelect={() => {
-          onSelectWorld("moon");
+          onSelectWorld(
+            "moon"
+          );
         }}
       />
 
       <CameraIntro
-        active={introStarted}
+        active={
+          introStarted
+        }
         onComplete={
           onIntroComplete
         }

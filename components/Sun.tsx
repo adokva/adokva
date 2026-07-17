@@ -17,7 +17,22 @@ import {
   SUN_POSITION,
 } from "../lib/space";
 
-function createCoronaTexture() {
+function pseudoRandom(
+  value: number
+) {
+  const result =
+    Math.sin(
+      value * 91.731
+    ) *
+    43758.5453;
+
+  return (
+    result -
+    Math.floor(result)
+  );
+}
+
+function createSoftGlowTexture() {
   const canvas =
     document.createElement(
       "canvas"
@@ -48,32 +63,32 @@ function createCoronaTexture() {
 
   gradient.addColorStop(
     0,
-    "rgba(255,255,225,1)"
+    "rgba(255,255,235,1)"
   );
 
   gradient.addColorStop(
-    0.12,
-    "rgba(255,224,110,.98)"
+    0.16,
+    "rgba(255,232,145,0.92)"
   );
 
   gradient.addColorStop(
-    0.25,
-    "rgba(255,146,20,.72)"
+    0.34,
+    "rgba(255,173,70,0.48)"
   );
 
   gradient.addColorStop(
-    0.48,
-    "rgba(255,75,5,.28)"
+    0.58,
+    "rgba(255,110,30,0.16)"
   );
 
   gradient.addColorStop(
-    0.75,
-    "rgba(255,35,0,.07)"
+    0.8,
+    "rgba(255,75,15,0.035)"
   );
 
   gradient.addColorStop(
     1,
-    "rgba(255,20,0,0)"
+    "rgba(255,60,0,0)"
   );
 
   context.fillStyle =
@@ -99,22 +114,7 @@ function createCoronaTexture() {
   return texture;
 }
 
-function pseudoRandom(
-  value: number
-) {
-  const result =
-    Math.sin(
-      value * 91.731
-    ) *
-    43758.5453;
-
-  return (
-    result -
-    Math.floor(result)
-  );
-}
-
-function createRayTexture() {
+function createCoronaTexture() {
   const canvas =
     document.createElement(
       "canvas"
@@ -138,49 +138,52 @@ function createRayTexture() {
     center
   );
 
-  /*
-    Лучи разной длины и яркости.
-
-    Они специально сделаны тоньше,
-    чтобы Солнце не выглядело
-    мультяшным.
-  */
+  const innerRadius = 190;
 
   for (
     let index = 0;
-    index < 320;
+    index < 460;
     index += 1
   ) {
-    const angle =
-      (index / 320) *
-      Math.PI *
-      2;
-
     const random =
-      pseudoRandom(index);
+      pseudoRandom(
+        index + 100
+      );
 
     const secondRandom =
       pseudoRandom(
-        index + 720
+        index + 900
       );
 
+    const thirdRandom =
+      pseudoRandom(
+        index + 1800
+      );
+
+    const angle =
+      (index / 460) *
+        Math.PI *
+        2 +
+      (random - 0.5) *
+        0.018;
+
     const length =
-      120 +
+      36 +
       Math.pow(
         random,
-        1.7
+        2.1
       ) *
-        360;
+        185;
 
     const width =
-      0.18 +
+      0.35 +
       secondRandom *
-        1.05;
+        1.6;
 
     const alpha =
-      0.012 +
-      random *
-        0.055;
+      0.018 +
+      thirdRandom *
+        0.075;
 
     context.save();
 
@@ -188,34 +191,41 @@ function createRayTexture() {
 
     const gradient =
       context.createLinearGradient(
-        62,
+        innerRadius,
         0,
-        length,
+        innerRadius + length,
         0
       );
 
     gradient.addColorStop(
       0,
-      `rgba(255,235,150,${alpha})`
+      `rgba(255,242,175,${
+        alpha * 1.5
+      })`
     );
 
     gradient.addColorStop(
-      0.25,
-      `rgba(255,155,45,${
-        alpha * 0.7
+      0.28,
+      `rgba(255,184,75,${alpha})`
+    );
+
+    gradient.addColorStop(
+      0.7,
+      `rgba(255,105,25,${
+        alpha * 0.32
       })`
     );
 
     gradient.addColorStop(
       1,
-      "rgba(255,65,0,0)"
+      "rgba(255,75,10,0)"
     );
 
     context.fillStyle =
       gradient;
 
     context.fillRect(
-      62,
+      innerRadius,
       -width / 2,
       length,
       width
@@ -261,24 +271,24 @@ function createProminenceTexture() {
     center
   );
 
-  /*
-    Неровные выбросы плазмы
-    по краю солнечного диска.
-  */
-
   for (
     let index = 0;
-    index < 22;
+    index < 18;
     index += 1
   ) {
     const random =
       pseudoRandom(
-        index + 1400
+        index + 2400
       );
 
     const secondRandom =
       pseudoRandom(
-        index + 2200
+        index + 3400
+      );
+
+    const thirdRandom =
+      pseudoRandom(
+        index + 4400
       );
 
     const angle =
@@ -287,22 +297,19 @@ function createProminenceTexture() {
       2;
 
     const startRadius =
-      205 +
-      secondRandom * 15;
+      206 +
+      secondRandom * 11;
 
     const height =
-      20 +
-      pseudoRandom(
-        index + 3100
-      ) *
-        85;
+      24 +
+      thirdRandom * 72;
 
     const sideways =
-      -30 +
+      -32 +
       pseudoRandom(
-        index + 4100
+        index + 5400
       ) *
-        60;
+        64;
 
     context.save();
 
@@ -318,25 +325,25 @@ function createProminenceTexture() {
 
     gradient.addColorStop(
       0,
-      "rgba(255,225,100,.72)"
+      "rgba(255,238,145,0.65)"
     );
 
     gradient.addColorStop(
-      0.38,
-      "rgba(255,115,20,.52)"
+      0.4,
+      "rgba(255,145,45,0.42)"
     );
 
     gradient.addColorStop(
       1,
-      "rgba(255,45,0,0)"
+      "rgba(255,75,15,0)"
     );
 
     context.strokeStyle =
       gradient;
 
     context.lineWidth =
-      1.5 +
-      secondRandom * 3;
+      1 +
+      secondRandom * 2.2;
 
     context.beginPath();
 
@@ -347,12 +354,12 @@ function createProminenceTexture() {
 
     context.bezierCurveTo(
       startRadius +
-        height * 0.25,
+        height * 0.28,
       sideways,
 
       startRadius +
         height * 0.72,
-      sideways * 1.2,
+      sideways * 1.08,
 
       startRadius + height,
       0
@@ -376,6 +383,176 @@ function createProminenceTexture() {
   return texture;
 }
 
+function createCleanSunTexture(
+  sourceTexture: THREE.Texture
+) {
+  const sourceImage =
+    sourceTexture.image as
+      | HTMLImageElement
+      | HTMLCanvasElement
+      | ImageBitmap;
+
+  const sourceWidth =
+    "naturalWidth" in sourceImage
+      ? sourceImage.naturalWidth
+      : sourceImage.width;
+
+  const sourceHeight =
+    "naturalHeight" in sourceImage
+      ? sourceImage.naturalHeight
+      : sourceImage.height;
+
+  const canvas =
+    document.createElement(
+      "canvas"
+    );
+
+  canvas.width = 1024;
+  canvas.height = 1024;
+
+  const context =
+    canvas.getContext("2d");
+
+  if (
+    !context ||
+    !sourceWidth ||
+    !sourceHeight
+  ) {
+    return sourceTexture.clone();
+  }
+
+  /*
+    Берём центральную квадратную
+    часть NASA-фотографии.
+
+    Благодаря этому подписи,
+    служебные данные и края
+    исходного изображения
+    уходят за пределы кадра.
+  */
+
+  const shortestSide =
+    Math.min(
+      sourceWidth,
+      sourceHeight
+    );
+
+  const cropSize =
+    shortestSide * 0.82;
+
+  const sourceX =
+    (sourceWidth -
+      cropSize) /
+    2;
+
+  const sourceY =
+    (sourceHeight -
+      cropSize) /
+      2 -
+    cropSize * 0.015;
+
+  context.clearRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  context.drawImage(
+    sourceImage,
+    sourceX,
+    sourceY,
+    cropSize,
+    cropSize,
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  /*
+    Круглая маска с мягким краем.
+
+    Она полностью убирает
+    прямоугольную форму фотографии
+    и остатки чёрного фона.
+  */
+
+  context.globalCompositeOperation =
+    "destination-in";
+
+  const center =
+    canvas.width / 2;
+
+  const mask =
+    context.createRadialGradient(
+      center,
+      center,
+      center * 0.83,
+      center,
+      center,
+      center * 0.985
+    );
+
+  mask.addColorStop(
+    0,
+    "rgba(255,255,255,1)"
+  );
+
+  mask.addColorStop(
+    0.72,
+    "rgba(255,255,255,1)"
+  );
+
+  mask.addColorStop(
+    0.93,
+    "rgba(255,255,255,0.96)"
+  );
+
+  mask.addColorStop(
+    1,
+    "rgba(255,255,255,0)"
+  );
+
+  context.fillStyle = mask;
+
+  context.fillRect(
+    0,
+    0,
+    canvas.width,
+    canvas.height
+  );
+
+  context.globalCompositeOperation =
+    "source-over";
+
+  const texture =
+    new THREE.CanvasTexture(
+      canvas
+    );
+
+  texture.colorSpace =
+    THREE.SRGBColorSpace;
+
+  texture.wrapS =
+    THREE.ClampToEdgeWrapping;
+
+  texture.wrapT =
+    THREE.ClampToEdgeWrapping;
+
+  texture.minFilter =
+    THREE.LinearFilter;
+
+  texture.magFilter =
+    THREE.LinearFilter;
+
+  texture.generateMipmaps = true;
+
+  texture.needsUpdate = true;
+
+  return texture;
+}
+
 type Props = {
   onSelect: () => void;
 };
@@ -392,40 +569,38 @@ export default function Sun({
   const corona =
     useRef<THREE.Sprite>(null);
 
-  const rays =
-    useRef<THREE.Sprite>(null);
-
   const prominences =
     useRef<THREE.Sprite>(null);
 
   const distantGlow =
     useRef<THREE.Sprite>(null);
 
-  /*
-    Настоящее изображение NASA.
-
-    Файл должен лежать здесь:
-
-    public/textures/sun.jpg
-  */
-
-  const sunTexture =
+  const sourceSunTexture =
     useLoader(
       THREE.TextureLoader,
       "/textures/sun.jpg"
+    );
+
+  const cleanSunTexture =
+    useMemo(
+      () =>
+        createCleanSunTexture(
+          sourceSunTexture
+        ),
+      [sourceSunTexture]
+    );
+
+  const softGlowTexture =
+    useMemo(
+      () =>
+        createSoftGlowTexture(),
+      []
     );
 
   const coronaTexture =
     useMemo(
       () =>
         createCoronaTexture(),
-      []
-    );
-
-  const rayTexture =
-    useMemo(
-      () =>
-        createRayTexture(),
       []
     );
 
@@ -437,61 +612,61 @@ export default function Sun({
     );
 
   useEffect(() => {
-    sunTexture.colorSpace =
+    sourceSunTexture.colorSpace =
       THREE.SRGBColorSpace;
 
-    sunTexture.wrapS =
+    sourceSunTexture.wrapS =
       THREE.ClampToEdgeWrapping;
 
-    sunTexture.wrapT =
+    sourceSunTexture.wrapT =
       THREE.ClampToEdgeWrapping;
 
-    sunTexture.minFilter =
+    sourceSunTexture.minFilter =
       THREE.LinearFilter;
 
-    sunTexture.magFilter =
+    sourceSunTexture.magFilter =
       THREE.LinearFilter;
 
-    sunTexture.anisotropy = 16;
-
-    sunTexture.needsUpdate =
+    sourceSunTexture.needsUpdate =
       true;
-  }, [sunTexture]);
+  }, [sourceSunTexture]);
 
   useEffect(() => {
     return () => {
+      cleanSunTexture.dispose();
+      softGlowTexture.dispose();
       coronaTexture.dispose();
-      rayTexture.dispose();
       prominenceTexture.dispose();
     };
   }, [
+    cleanSunTexture,
+    softGlowTexture,
     coronaTexture,
-    rayTexture,
     prominenceTexture,
   ]);
+
+  useEffect(() => {
+    return () => {
+      document.body.style.cursor =
+        "default";
+    };
+  }, []);
 
   useFrame((state, delta) => {
     const time =
       state.clock.elapsedTime;
 
-    /*
-      Настоящая фотография очень
-      медленно поворачивается.
-
-      Положение самого Солнца
-      остаётся неподвижным.
-    */
-
     if (sunPhoto.current) {
-      sunPhoto.current.material.rotation +=
-        delta * 0.003;
+      sunPhoto.current
+        .material.rotation +=
+        delta * 0.0015;
 
       const size =
-        0.92 +
+        0.96 +
         Math.sin(
-          time * 0.55
+          time * 0.48
         ) *
-          0.004;
+          0.003;
 
       sunPhoto.current.scale.set(
         size,
@@ -502,11 +677,11 @@ export default function Sun({
 
     if (innerGlow.current) {
       const size =
-        1.05 +
+        1.14 +
         Math.sin(
-          time * 0.8
+          time * 0.72
         ) *
-          0.012;
+          0.01;
 
       innerGlow.current.scale.set(
         size,
@@ -516,12 +691,16 @@ export default function Sun({
     }
 
     if (corona.current) {
+      corona.current
+        .material.rotation +=
+        delta * 0.00035;
+
       const size =
-        2.15 +
+        2.18 +
         Math.sin(
-          time * 0.48
+          time * 0.34
         ) *
-          0.035;
+          0.026;
 
       corona.current.scale.set(
         size,
@@ -532,15 +711,15 @@ export default function Sun({
 
     if (prominences.current) {
       prominences.current
-        .material.rotation +=
-        delta * 0.0015;
+        .material.rotation -=
+        delta * 0.0008;
 
       const size =
-        1.55 +
+        1.54 +
         Math.sin(
-          time * 0.36
+          time * 0.4
         ) *
-          0.025;
+          0.018;
 
       prominences.current.scale.set(
         size,
@@ -549,32 +728,13 @@ export default function Sun({
       );
     }
 
-    if (rays.current) {
-      rays.current
-        .material.rotation -=
-        delta * 0.0008;
-
-      const size =
-        4.25 +
-        Math.sin(
-          time * 0.24
-        ) *
-          0.05;
-
-      rays.current.scale.set(
-        size,
-        size,
-        1
-      );
-    }
-
     if (distantGlow.current) {
       const size =
-        6.4 +
+        3.45 +
         Math.sin(
-          time * 0.17
+          time * 0.2
         ) *
-          0.08;
+          0.035;
 
       distantGlow.current.scale.set(
         size,
@@ -592,37 +752,34 @@ export default function Sun({
         SUN_POSITION[2],
       ]}
     >
-      {/*
-        Солнце является настоящим
-        источником освещения Земли.
-      */}
-
       <pointLight
-        color="#fff0c2"
-        intensity={40}
+        color="#fff1c7"
+        intensity={34}
         distance={45}
         decay={2}
       />
 
       {/*
-        Дальнее красно-оранжевое
-        сияние.
+        Очень слабое дальнее сияние.
+
+        Оно больше не должно
+        заливать весь экран красным.
       */}
 
       <sprite
         ref={distantGlow}
         scale={[
-          6.4,
-          6.4,
+          3.45,
+          3.45,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
-          map={coronaTexture}
-          color="#ff3f0a"
+          map={softGlowTexture}
+          color="#ff9a45"
           transparent
-          opacity={0.08}
+          opacity={0.055}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -633,50 +790,26 @@ export default function Sun({
       </sprite>
 
       {/*
-        Очень тонкие дальние лучи.
-      */}
+        Неровная тонкая корона.
 
-      <sprite
-        ref={rays}
-        scale={[
-          4.25,
-          4.25,
-          1,
-        ]}
-        raycast={() => null}
-      >
-        <spriteMaterial
-          map={rayTexture}
-          color="#ff9a32"
-          transparent
-          opacity={0.52}
-          depthWrite={false}
-          depthTest={true}
-          toneMapped={false}
-          blending={
-            THREE.AdditiveBlending
-          }
-        />
-      </sprite>
-
-      {/*
-        Неровная солнечная корона.
+        Здесь больше нет длинных
+        одинаковых прямых лучей.
       */}
 
       <sprite
         ref={corona}
         scale={[
-          2.15,
-          2.15,
+          2.18,
+          2.18,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
           map={coronaTexture}
-          color="#ff9f32"
+          color="#ffb24f"
           transparent
-          opacity={0.68}
+          opacity={0.72}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -687,25 +820,24 @@ export default function Sun({
       </sprite>
 
       {/*
-        Выбросы плазмы по краям.
+        Небольшие протуберанцы
+        по краю солнечного диска.
       */}
 
       <sprite
         ref={prominences}
         scale={[
-          1.55,
-          1.55,
+          1.54,
+          1.54,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
-          map={
-            prominenceTexture
-          }
-          color="#ff711c"
+          map={prominenceTexture}
+          color="#ff9a3d"
           transparent
-          opacity={0.82}
+          opacity={0.7}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -716,24 +848,24 @@ export default function Sun({
       </sprite>
 
       {/*
-        Мягкое внутреннее свечение
-        под фотографией.
+        Мягкое свечение непосредственно
+        вокруг солнечного диска.
       */}
 
       <sprite
         ref={innerGlow}
         scale={[
-          1.05,
-          1.05,
+          1.14,
+          1.14,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
-          map={coronaTexture}
-          color="#ffb347"
+          map={softGlowTexture}
+          color="#ffd07a"
           transparent
-          opacity={0.28}
+          opacity={0.2}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
@@ -744,43 +876,45 @@ export default function Sun({
       </sprite>
 
       {/*
-        =================================
-        НАСТОЯЩАЯ ФОТОГРАФИЯ СОЛНЦА NASA
-        =================================
+        Очищенная NASA-фотография.
 
-        Чёрный фон фотографии исчезает
-        благодаря AdditiveBlending.
+        Центральный crop убирает
+        служебные надписи.
+
+        Круглая маска убирает
+        прямоугольник и чёрный фон.
       */}
 
       <sprite
         ref={sunPhoto}
         scale={[
-          0.92,
-          0.92,
+          0.96,
+          0.96,
           1,
         ]}
         raycast={() => null}
       >
         <spriteMaterial
-          map={sunTexture}
+          map={cleanSunTexture}
           color="#ffffff"
           transparent
           opacity={1}
+          alphaTest={0.015}
           depthWrite={false}
           depthTest={true}
           toneMapped={false}
           blending={
-            THREE.AdditiveBlending
+            THREE.NormalBlending
           }
         />
       </sprite>
 
       {/*
-        Невидимая область нажатия.
+        Невидимая кликабельная область.
 
-        Она остаётся отдельной,
-        поэтому фотография, корона
-        и лучи не мешают клику.
+        Перелёт камеры и кнопка
+        возврата продолжают работать
+        через прежний onSelect.
       */}
 
       <mesh
@@ -799,7 +933,11 @@ export default function Sun({
           document.body.style.cursor =
             "pointer";
         }}
-        onPointerOut={() => {
+        onPointerOut={(
+          event
+        ) => {
+          event.stopPropagation();
+
           document.body.style.cursor =
             "default";
         }}

@@ -18,8 +18,9 @@ import Atmosphere from "./Atmosphere";
 import Clouds from "./Clouds";
 import Marker from "./Marker";
 
-import { locations } from "../data/locations";
-import { SUN_POSITION } from "../lib/space";
+import {
+  locations,
+} from "../data/locations";
 
 export type GlobeTarget = {
   lat: number;
@@ -30,6 +31,241 @@ type Props = {
   target: GlobeTarget;
 };
 
+type SolarCoordinates = {
+  latitude: number;
+  longitude: number;
+};
+
+const DEG_TO_RAD =
+  Math.PI / 180;
+
+const RAD_TO_DEG =
+  180 / Math.PI;
+
+/*
+  Новая астрономическая позиция
+  Солнца рассчитывается раз
+  в 30 секунд.
+
+  Между расчётами направление
+  изменяется плавно.
+*/
+
+const SUN_UPDATE_INTERVAL =
+  30000;
+
+function normalizeDegrees(
+  value: number
+) {
+  return (
+    ((value % 360) + 360) %
+    360
+  );
+}
+
+function normalizeLongitude(
+  value: number
+) {
+  return (
+    ((value + 180) % 360 +
+      360) %
+      360 -
+    180
+  );
+}
+
+function dateToJulianDay(
+  date: Date
+) {
+  return (
+    date.getTime() /
+      86400000 +
+    2440587.5
+  );
+}
+
+/*
+  Рассчитывает географическую точку,
+  над которой Солнце находится
+  практически в зените.
+
+  Расчёт основан на текущей дате
+  и времени UTC.
+*/
+
+function getSubsolarCoordinates(
+  date: Date
+): SolarCoordinates {
+  const julianDay =
+    dateToJulianDay(
+      date
+    );
+
+  const daysSinceJ2000 =
+    julianDay -
+    2451545;
+
+  const centuriesSinceJ2000 =
+    daysSinceJ2000 /
+    36525;
+
+  const meanLongitude =
+    normalizeDegrees(
+      280.46646 +
+        36000.76983 *
+          centuriesSinceJ2000 +
+        0.0003032 *
+          centuriesSinceJ2000 *
+          centuriesSinceJ2000
+    );
+
+  const meanAnomaly =
+    normalizeDegrees(
+      357.52911 +
+        35999.05029 *
+          centuriesSinceJ2000 -
+        0.0001537 *
+          centuriesSinceJ2000 *
+          centuriesSinceJ2000
+    ) *
+    DEG_TO_RAD;
+
+  const equationOfCenter =
+    (
+      1.914602 -
+      0.004817 *
+        centuriesSinceJ2000 -
+      0.000014 *
+        centuriesSinceJ2000 *
+        centuriesSinceJ2000
+    ) *
+      Math.sin(
+        meanAnomaly
+      ) +
+    (
+      0.019993 -
+      0.000101 *
+        centuriesSinceJ2000
+    ) *
+      Math.sin(
+        meanAnomaly * 2
+      ) +
+    0.000289 *
+      Math.sin(
+        meanAnomaly * 3
+      );
+
+  const trueLongitude =
+    meanLongitude +
+    equationOfCenter;
+
+  const omega =
+    (
+      125.04 -
+      1934.136 *
+        centuriesSinceJ2000
+    ) *
+    DEG_TO_RAD;
+
+  const apparentLongitude =
+    (
+      trueLongitude -
+      0.00569 -
+      0.00478 *
+        Math.sin(
+          omega
+        )
+    ) *
+    DEG_TO_RAD;
+
+  const meanObliquity =
+    (
+      23 +
+      (
+        26 +
+        (
+          21.448 -
+          46.815 *
+            centuriesSinceJ2000 -
+          0.00059 *
+            centuriesSinceJ2000 *
+            centuriesSinceJ2000 +
+          0.001813 *
+            centuriesSinceJ2000 *
+            centuriesSinceJ2000 *
+            centuriesSinceJ2000
+        ) /
+          60
+      ) /
+        60
+    ) *
+    DEG_TO_RAD;
+
+  const trueObliquity =
+    meanObliquity +
+    0.00256 *
+      DEG_TO_RAD *
+      Math.cos(
+        omega
+      );
+
+  const rightAscension =
+    Math.atan2(
+      Math.cos(
+        trueObliquity
+      ) *
+        Math.sin(
+          apparentLongitude
+        ),
+
+      Math.cos(
+        apparentLongitude
+      )
+    );
+
+  const declination =
+    Math.asin(
+      Math.sin(
+        trueObliquity
+      ) *
+        Math.sin(
+          apparentLongitude
+        )
+    );
+
+  const greenwichSiderealTime =
+    normalizeDegrees(
+      280.46061837 +
+        360.98564736629 *
+          daysSinceJ2000 +
+        0.000387933 *
+          centuriesSinceJ2000 *
+          centuriesSinceJ2000 -
+        (
+          centuriesSinceJ2000 *
+          centuriesSinceJ2000 *
+          centuriesSinceJ2000
+        ) /
+          38710000
+    );
+
+  const latitude =
+    declination *
+    RAD_TO_DEG;
+
+  const longitude =
+    normalizeLongitude(
+      rightAscension *
+        RAD_TO_DEG -
+        greenwichSiderealTime
+    );
+
+  return {
+    latitude,
+    longitude,
+  };
+}
+
 function latLonToVector3(
   lat: number,
   lon: number,
@@ -37,24 +273,49 @@ function latLonToVector3(
 ) {
   const phi =
     (90 - lat) *
-    (Math.PI / 180);
+    DEG_TO_RAD;
 
   const theta =
     (lon + 180) *
-    (Math.PI / 180);
+    DEG_TO_RAD;
 
   return new THREE.Vector3(
     -radius *
-      Math.sin(phi) *
-      Math.cos(theta),
+      Math.sin(
+        phi
+      ) *
+      Math.cos(
+        theta
+      ),
 
     radius *
-      Math.cos(phi),
+      Math.cos(
+        phi
+      ),
 
     radius *
-      Math.sin(phi) *
-      Math.sin(theta)
+      Math.sin(
+        phi
+      ) *
+      Math.sin(
+        theta
+      )
   );
+}
+
+function getRealSunDirection(
+  date: Date
+) {
+  const coordinates =
+    getSubsolarCoordinates(
+      date
+    );
+
+  return latLonToVector3(
+    coordinates.latitude,
+    coordinates.longitude,
+    1
+  ).normalize();
 }
 
 function isSameLocation(
@@ -70,10 +331,12 @@ function isSameLocation(
 
   return (
     Math.abs(
-      city.lat - target.lat
+      city.lat -
+        target.lat
     ) < 0.01 &&
     Math.abs(
-      city.lon - target.lon
+      city.lon -
+        target.lon
     ) < 0.01
   );
 }
@@ -82,80 +345,128 @@ export default function Globe({
   target,
 }: Props) {
   const group =
-    useRef<THREE.Group>(null!);
-
-  const { camera } = useThree();
-
-  const destinationQuaternion =
-    useRef<THREE.Quaternion | null>(
+    useRef<THREE.Group>(
       null
     );
 
+  const {
+    camera,
+  } = useThree();
+
+  const destinationQuaternion =
+    useRef<
+      THREE.Quaternion | null
+    >(null);
+
+  const lastSunUpdate =
+    useRef(0);
+
   const neutralQuaternion =
     useMemo(
-      () => new THREE.Quaternion(),
+      () =>
+        new THREE.Quaternion(),
       []
     );
 
-  const day = useLoader(
-    THREE.TextureLoader,
-    "/textures/earth.jpg"
-  );
+  const initialSunDirection =
+    useMemo(
+      () =>
+        getRealSunDirection(
+          new Date()
+        ),
+      []
+    );
 
-  const night = useLoader(
-    THREE.TextureLoader,
-    "/textures/night.jpg"
-  );
+  const targetSunDirection =
+    useRef(
+      initialSunDirection.clone()
+    );
 
-  day.colorSpace =
-    THREE.SRGBColorSpace;
+  const dayTexture =
+    useLoader(
+      THREE.TextureLoader,
+      "/textures/earth.jpg"
+    );
 
-  night.colorSpace =
-    THREE.SRGBColorSpace;
+  const nightTexture =
+    useLoader(
+      THREE.TextureLoader,
+      "/textures/night.jpg"
+    );
 
-  day.anisotropy = 16;
-  night.anisotropy = 16;
+  useEffect(() => {
+    dayTexture.colorSpace =
+      THREE.SRGBColorSpace;
 
-  day.wrapS =
-    THREE.RepeatWrapping;
+    nightTexture.colorSpace =
+      THREE.SRGBColorSpace;
 
-  night.wrapS =
-    THREE.RepeatWrapping;
+    dayTexture.anisotropy = 16;
+    nightTexture.anisotropy = 16;
+
+    dayTexture.wrapS =
+      THREE.RepeatWrapping;
+
+    nightTexture.wrapS =
+      THREE.RepeatWrapping;
+
+    dayTexture.wrapT =
+      THREE.ClampToEdgeWrapping;
+
+    nightTexture.wrapT =
+      THREE.ClampToEdgeWrapping;
+
+    dayTexture.needsUpdate =
+      true;
+
+    nightTexture.needsUpdate =
+      true;
+  }, [
+    dayTexture,
+    nightTexture,
+  ]);
 
   const earthUniforms =
     useMemo(
       () => ({
         dayTexture: {
-          value: day,
+          value:
+            dayTexture,
         },
 
         nightTexture: {
-          value: night,
+          value:
+            nightTexture,
         },
 
-        sunPosition: {
+        sunDirection: {
           value:
-            new THREE.Vector3(
-              SUN_POSITION[0],
-              SUN_POSITION[1],
-              SUN_POSITION[2]
-            ),
+            initialSunDirection.clone(),
         },
 
         daylightStrength: {
-          value: 0.93,
+          value: 0.96,
         },
 
         nightStrength: {
-          value: 1.05,
+          value: 1.08,
         },
 
         ambientStrength: {
-          value: 0.035,
+          value: 0.022,
         },
       }),
-      [day, night]
+      [
+        dayTexture,
+        initialSunDirection,
+        nightTexture,
+      ]
     );
+
+  /*
+    Поворот Земли к найденному
+    человеку или городу.
+  */
 
   useEffect(() => {
     if (!target) {
@@ -206,146 +517,220 @@ export default function Globe({
     target,
   ]);
 
-  useFrame((_, delta) => {
-    if (
-      !group.current ||
-      !destinationQuaternion.current
-    ) {
-      return;
-    }
+  useFrame(
+    (
+      state,
+      delta
+    ) => {
+      /*
+        Пересчёт настоящего положения
+        Солнца по текущему UTC.
+      */
 
-    const smoothness =
-      1 -
-      Math.exp(-delta * 2.25);
+      const elapsedMilliseconds =
+        state.clock
+          .elapsedTime *
+        1000;
 
-    group.current.quaternion.slerp(
-      destinationQuaternion.current,
-      smoothness
-    );
+      if (
+        lastSunUpdate.current ===
+          0 ||
+        elapsedMilliseconds -
+          lastSunUpdate.current >=
+          SUN_UPDATE_INTERVAL
+      ) {
+        targetSunDirection.current.copy(
+          getRealSunDirection(
+            new Date()
+          )
+        );
 
-    const remainingAngle =
-      group.current.quaternion.angleTo(
-        destinationQuaternion.current
+        lastSunUpdate.current =
+          elapsedMilliseconds;
+      }
+
+      /*
+        Плавное движение терминатора.
+
+        Даже при новом расчёте
+        граница дня и ночи
+        не должна дёргаться.
+      */
+
+      const sunSmoothness =
+        1 -
+        Math.exp(
+          -delta * 0.8
+        );
+
+      earthUniforms
+        .sunDirection
+        .value
+        .lerp(
+          targetSunDirection.current,
+          sunSmoothness
+        )
+        .normalize();
+
+      /*
+        Плавный поворот Земли
+        к выбранному человеку.
+      */
+
+      if (
+        !group.current ||
+        !destinationQuaternion.current
+      ) {
+        return;
+      }
+
+      const rotationSmoothness =
+        1 -
+        Math.exp(
+          -delta * 2.25
+        );
+
+      group.current.quaternion.slerp(
+        destinationQuaternion.current,
+        rotationSmoothness
       );
 
-    if (
-      remainingAngle < 0.0005
-    ) {
-      group.current.quaternion.copy(
-        destinationQuaternion.current
-      );
+      const remainingAngle =
+        group.current
+          .quaternion
+          .angleTo(
+            destinationQuaternion.current
+          );
 
-      destinationQuaternion.current =
-        null;
+      if (
+        remainingAngle <
+        0.0005
+      ) {
+        group.current.quaternion.copy(
+          destinationQuaternion.current
+        );
+
+        destinationQuaternion.current =
+          null;
+      }
     }
-  });
+  );
 
   return (
-    <group ref={group}>
-      {/* Земля: естественный день и глубокая ночь */}
+    <group
+      ref={group}
+    >
+      {/*
+        Земля с реальным терминатором,
+        рассчитанным по времени UTC.
+      */}
 
       <mesh>
         <sphereGeometry
-          args={[2, 192, 192]}
+          args={[
+            2,
+            192,
+            192,
+          ]}
         />
 
         <shaderMaterial
-          uniforms={earthUniforms}
+          uniforms={
+            earthUniforms
+          }
           vertexShader={`
             varying vec2 vUv;
-            varying vec3 vWorldNormal;
-            varying vec3 vWorldPosition;
+            varying vec3 vLocalNormal;
 
             void main() {
               vUv = uv;
 
-              vec4 worldPosition =
-                modelMatrix *
-                vec4(position, 1.0);
-
-              vWorldPosition =
-                worldPosition.xyz;
-
-              vWorldNormal =
-                normalize(
-                  mat3(modelMatrix) *
-                  normal
-                );
+              vLocalNormal =
+                normalize(normal);
 
               gl_Position =
                 projectionMatrix *
-                viewMatrix *
-                worldPosition;
+                modelViewMatrix *
+                vec4(
+                  position,
+                  1.0
+                );
             }
           `}
           fragmentShader={`
             uniform sampler2D dayTexture;
             uniform sampler2D nightTexture;
 
-            uniform vec3 sunPosition;
+            uniform vec3 sunDirection;
 
             uniform float daylightStrength;
             uniform float nightStrength;
             uniform float ambientStrength;
 
             varying vec2 vUv;
-            varying vec3 vWorldNormal;
-            varying vec3 vWorldPosition;
+            varying vec3 vLocalNormal;
 
             void main() {
               vec3 normalDirection =
-                normalize(vWorldNormal);
-
-              vec3 sunDirection =
                 normalize(
-                  sunPosition -
-                  vWorldPosition
+                  vLocalNormal
+                );
+
+              vec3 normalizedSunDirection =
+                normalize(
+                  sunDirection
                 );
 
               float sunDot =
                 dot(
                   normalDirection,
-                  sunDirection
+                  normalizedSunDirection
                 );
 
               /*
-                Мягкое дневное освещение.
+                Дневная сторона.
+
+                Переход достаточно мягкий,
+                но географическая граница
+                остаётся настоящей.
               */
 
               float daylight =
                 smoothstep(
-                  -0.08,
-                  0.38,
+                  -0.13,
+                  0.28,
                   sunDot
                 );
 
               /*
-                Огни появляются только
-                в глубокой ночи.
+                Огни городов включаются
+                после захода Солнца.
 
-                На дневной стороне они
-                полностью выключены.
+                На дневной стороне
+                они полностью исчезают.
               */
 
               float nightMask =
                 1.0 -
                 smoothstep(
-                  -0.34,
-                  -0.08,
+                  -0.22,
+                  0.015,
                   sunDot
                 );
 
               /*
-                Очень узкая и спокойная
-                сумеречная полоса.
+                Сумеречная зона
+                вдоль терминатора.
               */
 
               float twilight =
                 1.0 -
                 smoothstep(
                   0.0,
-                  0.09,
-                  abs(sunDot)
+                  0.15,
+                  abs(
+                    sunDot
+                  )
                 );
 
               vec3 dayColor =
@@ -361,19 +746,16 @@ export default function Globe({
                 ).rgb;
 
               /*
-                Убираем пластиковую
-                насыщенную синеву океана.
-
-                Немного снижаем синий канал
-                и возвращаем естественную
-                глубину изображения.
+                Естественная цветокоррекция
+                поверхности Земли.
               */
 
-              dayColor *= vec3(
-                0.98,
-                0.97,
-                0.84
-              );
+              dayColor *=
+                vec3(
+                  0.98,
+                  0.97,
+                  0.87
+                );
 
               float luminance =
                 dot(
@@ -387,19 +769,12 @@ export default function Globe({
 
               dayColor =
                 mix(
-                  vec3(luminance),
+                  vec3(
+                    luminance
+                  ),
                   dayColor,
-                  0.94
+                  0.95
                 );
-
-              /*
-                На освещённой стороне
-                есть мягкий солнечный свет.
-
-                На ночной стороне остаётся
-                только слабая видимость
-                поверхности.
-              */
 
               float surfaceLight =
                 ambientStrength +
@@ -410,35 +785,29 @@ export default function Globe({
                 dayColor *
                 surfaceLight;
 
-              /*
-                Огни городов не окрашивают
-                всю поверхность, а добавляются
-                только в глубокой ночи.
-              */
-
               vec3 illuminatedNight =
                 cityLights *
                 nightMask *
                 nightStrength;
 
               /*
-                Едва заметный тёплый край,
-                без фиолетового пятна.
+                Очень тонкая тёплая линия
+                заката и рассвета.
               */
 
-              vec3 sunsetColor =
+              vec3 twilightColor =
                 vec3(
-                  0.16,
-                  0.055,
-                  0.012
+                  0.17,
+                  0.045,
+                  0.006
                 ) *
                 twilight *
-                0.035;
+                0.04;
 
               vec3 finalColor =
                 illuminatedDay +
                 illuminatedNight +
-                sunsetColor;
+                twilightColor;
 
               gl_FragColor =
                 vec4(
@@ -453,7 +822,9 @@ export default function Globe({
         />
       </mesh>
 
-      {/* Очень тонкий океанический блеск */}
+      {/*
+        Тонкий океанический слой.
+      */}
 
       <mesh>
         <sphereGeometry
@@ -471,46 +842,50 @@ export default function Globe({
           roughness={0.62}
           metalness={0}
           clearcoat={0.08}
-          clearcoatRoughness={0.72}
+          clearcoatRoughness={
+            0.72
+          }
           depthWrite={false}
         />
       </mesh>
 
-      {/* Атмосфера */}
-
       <Atmosphere />
 
-      {/* Маркеры */}
+      {/*
+        Маркеры городов.
+      */}
 
-      {locations.map((city) => {
-        const selected =
-          isSameLocation(
-            city,
-            target
-          );
+      {locations.map(
+        (city) => {
+          const selected =
+            isSameLocation(
+              city,
+              target
+            );
 
-        return (
-          <Marker
-            key={city.id}
-            selected={selected}
-            position={
-              latLonToVector3(
-                city.lat,
-                city.lon,
+          return (
+            <Marker
+              key={city.id}
+              selected={
                 selected
-                  ? 2.065
-                  : 2.035
-              ).toArray() as [
-                number,
-                number,
-                number,
-              ]
-            }
-          />
-        );
-      })}
-
-      {/* Облака */}
+              }
+              position={
+                latLonToVector3(
+                  city.lat,
+                  city.lon,
+                  selected
+                    ? 2.065
+                    : 2.035
+                ).toArray() as [
+                  number,
+                  number,
+                  number,
+                ]
+              }
+            />
+          );
+        }
+      )}
 
       <Clouds />
     </group>

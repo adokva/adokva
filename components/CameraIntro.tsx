@@ -1,7 +1,15 @@
 "use client";
 
-import { useEffect, useRef } from "react";
-import { useFrame, useThree } from "@react-three/fiber";
+import {
+  useEffect,
+  useRef,
+} from "react";
+
+import {
+  useFrame,
+  useThree,
+} from "@react-three/fiber";
+
 import * as THREE from "three";
 
 type Props = {
@@ -9,125 +17,222 @@ type Props = {
   onComplete: () => void;
 };
 
-const START_POSITION = new THREE.Vector3(
-  14,
-  7,
-  20
-);
+const START_POSITION =
+  new THREE.Vector3(
+    14,
+    7,
+    20
+  );
 
-const CONTROL_POSITION = new THREE.Vector3(
-  8,
-  4.5,
-  12
-);
+const CONTROL_POSITION =
+  new THREE.Vector3(
+    5.8,
+    3.1,
+    12.2
+  );
 
-const END_POSITION = new THREE.Vector3(
-  0,
-  0,
-  8
-);
+const END_POSITION =
+  new THREE.Vector3(
+    0,
+    0,
+    8
+  );
 
-const EARTH_TARGET = new THREE.Vector3(
-  0,
-  0,
-  0
-);
+const EARTH_TARGET =
+  new THREE.Vector3(
+    0,
+    0,
+    0
+  );
 
-function easeOutCubic(value: number) {
-  return 1 - Math.pow(1 - value, 3);
+const INTRO_DURATION =
+  2.55;
+
+function easeInOutCubic(
+  value: number
+) {
+  if (value < 0.5) {
+    return (
+      4 *
+      value *
+      value *
+      value
+    );
+  }
+
+  return (
+    1 -
+    Math.pow(
+      -2 * value + 2,
+      3
+    ) /
+      2
+  );
 }
 
 export default function CameraIntro({
   active,
   onComplete,
 }: Props) {
-  const { camera } = useThree();
+  const {
+    camera,
+  } = useThree();
 
-  const elapsed = useRef(0);
-  const finished = useRef(false);
+  const elapsed =
+    useRef(0);
+
+  const finished =
+    useRef(false);
+
+  const firstPart =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const secondPart =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const curvedPosition =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const lookTarget =
+    useRef(
+      new THREE.Vector3()
+    );
 
   useEffect(() => {
-    if (!active) {
-      elapsed.current = 0;
-      finished.current = false;
-
-      camera.position.copy(
-        START_POSITION
-      );
-
-      camera.lookAt(EARTH_TARGET);
-
-      camera.updateProjectionMatrix();
-    }
-  }, [active, camera]);
-
-  useFrame((_, delta) => {
-    if (!active || finished.current) {
+    if (active) {
       return;
     }
 
-    elapsed.current += delta;
+    elapsed.current = 0;
+    finished.current = false;
 
-    const duration = 3.6;
-
-    const rawProgress = Math.min(
-      elapsed.current / duration,
-      1
+    camera.position.copy(
+      START_POSITION
     );
 
+    camera.lookAt(
+      EARTH_TARGET
+    );
+
+    camera.updateProjectionMatrix();
+  }, [
+    active,
+    camera,
+  ]);
+
+  useFrame((_, delta) => {
+    if (
+      !active ||
+      finished.current
+    ) {
+      return;
+    }
+
+    elapsed.current +=
+      Math.min(
+        delta,
+        0.05
+      );
+
+    const rawProgress =
+      Math.min(
+        elapsed.current /
+          INTRO_DURATION,
+        1
+      );
+
     const progress =
-      easeOutCubic(rawProgress);
+      easeInOutCubic(
+        rawProgress
+      );
 
-    const firstPart =
-      START_POSITION
-        .clone()
-        .lerp(
-          CONTROL_POSITION,
-          progress
-        );
+    /*
+      Плавная кинематографическая
+      дуга по кривой Безье.
+    */
 
-    const secondPart =
-      CONTROL_POSITION
-        .clone()
-        .lerp(
-          END_POSITION,
-          progress
-        );
-
-    const curvedPosition =
-      firstPart.lerp(
-        secondPart,
+    firstPart.current
+      .lerpVectors(
+        START_POSITION,
+        CONTROL_POSITION,
         progress
       );
 
-    camera.position.copy(
-      curvedPosition
-    );
-
-    const targetLift =
-      Math.sin(progress * Math.PI) *
-      0.35;
-
-    camera.lookAt(
-      EARTH_TARGET.x,
-      EARTH_TARGET.y + targetLift,
-      EARTH_TARGET.z
-    );
-
-    if (
-      rawProgress >= 1 &&
-      !finished.current
-    ) {
-      finished.current = true;
-
-      camera.position.copy(
-        END_POSITION
+    secondPart.current
+      .lerpVectors(
+        CONTROL_POSITION,
+        END_POSITION,
+        progress
       );
 
-      camera.lookAt(EARTH_TARGET);
+    curvedPosition.current
+      .lerpVectors(
+        firstPart.current,
+        secondPart.current,
+        progress
+      );
 
-      onComplete();
+    /*
+      Небольшой дополнительный
+      подъём камеры в середине пути.
+    */
+
+    curvedPosition.current.y +=
+      Math.sin(
+        rawProgress *
+          Math.PI
+      ) *
+      0.28;
+
+    camera.position.copy(
+      curvedPosition.current
+    );
+
+    /*
+      Камера всё время спокойно
+      смотрит на Землю.
+
+      Это убирает рывок взгляда
+      в конце интро.
+    */
+
+    lookTarget.current.set(
+      0,
+      Math.sin(
+        rawProgress *
+          Math.PI
+      ) *
+        0.08,
+      0
+    );
+
+    camera.lookAt(
+      lookTarget.current
+    );
+
+    if (rawProgress < 1) {
+      return;
     }
+
+    finished.current = true;
+
+    camera.position.copy(
+      END_POSITION
+    );
+
+    camera.lookAt(
+      EARTH_TARGET
+    );
+
+    camera.updateProjectionMatrix();
+
+    onComplete();
   });
 
   return null;

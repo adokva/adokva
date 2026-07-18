@@ -8,8 +8,10 @@ import CanvasScene from "@/components/CanvasScene";
 import MenuButton from "@/components/MenuButton";
 import PersonCard from "@/components/PersonCard";
 
-import SearchPanel, {
-  SelectedPerson,
+import SearchPanel from "@/components/SearchPanel";
+
+import type {
+  SelectedSearchResult,
 } from "@/components/SearchPanel";
 
 import WelcomeScreen from "@/components/WelcomeScreen";
@@ -40,12 +42,12 @@ export default function Home() {
   ] = useState(false);
 
   const [
-    selectedPerson,
-    setSelectedPerson,
+    selectedResult,
+    setSelectedResult,
   ] =
-    useState<SelectedPerson | null>(
-      null
-    );
+    useState<
+      SelectedSearchResult | null
+    >(null);
 
   const [
     selectedWorld,
@@ -59,27 +61,34 @@ export default function Home() {
     selectedWorld !== null &&
     selectedWorld !== "earth";
 
+  const selectedPerson =
+    selectedResult?.type ===
+    "person"
+      ? selectedResult
+      : null;
+
+  const selectedLocation =
+    selectedResult
+      ? {
+          lat:
+            selectedResult.lat,
+
+          lon:
+            selectedResult.lon,
+        }
+      : null;
+
   const handleSelectWorld = (
     world: SelectedWorld
   ) => {
-    setSelectedPerson(null);
+    setSelectedResult(null);
     setSearchOpen(false);
-
-    /*
-      Повторное нажатие на уже
-      выбранный мир возвращает
-      камеру к Земле.
-
-      Пример:
-
-      Солнце → Солнце = Земля
-      Луна → Луна = Земля
-    */
 
     setSelectedWorld(
       (currentWorld) => {
         if (
-          currentWorld === world
+          currentWorld ===
+          world
         ) {
           return "earth";
         }
@@ -115,15 +124,7 @@ export default function Home() {
         selectedLocation={
           exploringWorld
             ? null
-            : selectedPerson
-              ? {
-                  lat:
-                    selectedPerson.lat,
-
-                  lon:
-                    selectedPerson.lon,
-                }
-              : null
+            : selectedLocation
         }
         selectedWorld={
           selectedWorld
@@ -195,10 +196,10 @@ export default function Home() {
           >
             <SearchPanel
               onSelect={(
-                person
+                result
               ) => {
-                setSelectedPerson(
-                  person
+                setSelectedResult(
+                  result
                 );
 
                 setSearchOpen(
@@ -223,7 +224,7 @@ export default function Home() {
               selectedPerson.country
             }
             onClose={() => {
-              setSelectedPerson(
+              setSelectedResult(
                 null
               );
             }}
@@ -250,6 +251,7 @@ export default function Home() {
           @keyframes adokvaPanelOpen {
             from {
               opacity: 0;
+
               transform:
                 translateX(-28px)
                 scale(.97);
@@ -257,6 +259,7 @@ export default function Home() {
 
             to {
               opacity: 1;
+
               transform:
                 translateX(0)
                 scale(1);

@@ -1,35 +1,47 @@
 "use client";
 
-import { useState } from "react";
+import {
+  useState,
+} from "react";
 
 type Props = {
   onJourneyStart: () => void;
   onFinish: () => void;
 };
 
+const WELCOME_EXIT_DURATION =
+  900;
+
 export default function WelcomeScreen({
   onJourneyStart,
   onFinish,
 }: Props) {
-  const [closing, setClosing] =
-    useState(false);
+  const [
+    closing,
+    setClosing,
+  ] = useState(false);
 
   const startJourney = () => {
-    if (closing) return;
+    if (closing) {
+      return;
+    }
 
     setClosing(true);
 
     /*
-      Запускаем камеру сразу,
-      пока заставка ещё начинает
-      исчезать.
+      Камера начинает движение
+      сразу после нажатия.
+
+      Заставка одновременно
+      плавно растворяется,
+      поэтому задержки больше нет.
     */
 
     onJourneyStart();
 
     window.setTimeout(() => {
       onFinish();
-    }, 1400);
+    }, WELCOME_EXIT_DURATION);
   };
 
   return (
@@ -55,18 +67,28 @@ export default function WelcomeScreen({
           "radial-gradient(circle at 50% 42%, rgba(16,40,66,.98) 0%, rgba(6,17,31,.98) 34%, rgba(2,6,12,.99) 66%, #000 100%)",
 
         opacity:
-          closing ? 0 : 1,
+          closing
+            ? 0
+            : 1,
 
         transform:
           closing
-            ? "scale(1.1)"
+            ? "scale(1.055)"
             : "scale(1)",
 
+        filter:
+          closing
+            ? "blur(3px)"
+            : "blur(0px)",
+
         transition:
-          "opacity 1400ms ease, transform 1400ms cubic-bezier(.22,1,.36,1)",
+          `
+            opacity ${WELCOME_EXIT_DURATION}ms cubic-bezier(.22,1,.36,1),
+            transform ${WELCOME_EXIT_DURATION}ms cubic-bezier(.22,1,.36,1),
+            filter ${WELCOME_EXIT_DURATION}ms ease
+          `,
       }}
     >
-      {/* Голубое свечение */}
       <div
         style={{
           position: "absolute",
@@ -82,17 +104,21 @@ export default function WelcomeScreen({
           filter: "blur(22px)",
 
           animation:
-            "adokvaWelcomePulse 4s ease-in-out infinite",
+            closing
+              ? "none"
+              : "adokvaWelcomePulse 4s ease-in-out infinite",
         }}
       />
 
-      {/* Звёздный слой */}
       <div
         style={{
           position: "absolute",
           inset: 0,
 
-          opacity: 0.7,
+          opacity:
+            closing
+              ? 0.25
+              : 0.7,
 
           backgroundImage: `
             radial-gradient(circle at 12% 18%, white 0 1px, transparent 1.5px),
@@ -107,7 +133,12 @@ export default function WelcomeScreen({
             "210px 210px, 260px 260px, 190px 190px, 310px 310px, 230px 230px, 280px 280px",
 
           animation:
-            "adokvaStarsMove 22s linear infinite",
+            closing
+              ? "none"
+              : "adokvaStarsMove 22s linear infinite",
+
+          transition:
+            `opacity ${WELCOME_EXIT_DURATION}ms ease`,
         }}
       />
 
@@ -126,6 +157,22 @@ export default function WelcomeScreen({
           padding: 24,
 
           textAlign: "center",
+
+          opacity:
+            closing
+              ? 0
+              : 1,
+
+          transform:
+            closing
+              ? "translateY(-18px) scale(.98)"
+              : "translateY(0) scale(1)",
+
+          transition:
+            `
+              opacity 560ms ease,
+              transform 760ms cubic-bezier(.22,1,.36,1)
+            `,
         }}
       >
         <div
@@ -203,6 +250,7 @@ export default function WelcomeScreen({
 
         <button
           type="button"
+          disabled={closing}
           onClick={startJourney}
           style={{
             marginTop: 54,
@@ -217,7 +265,10 @@ export default function WelcomeScreen({
             border:
               "1px solid rgba(151,216,255,.55)",
 
-            cursor: "pointer",
+            cursor:
+              closing
+                ? "default"
+                : "pointer",
 
             background:
               "linear-gradient(135deg, rgba(12,102,232,.98), rgba(42,184,255,.98))",
@@ -233,10 +284,17 @@ export default function WelcomeScreen({
               "0 0 28px rgba(22,139,255,.42), inset 0 1px rgba(255,255,255,.35)",
 
             animation:
-              "adokvaButtonBreath 2.4s ease-in-out infinite",
+              closing
+                ? "none"
+                : "adokvaButtonBreath 2.4s ease-in-out infinite",
+
+            opacity:
+              closing
+                ? 0.7
+                : 1,
 
             transition:
-              "transform .25s ease, box-shadow .25s ease",
+              "transform .25s ease, box-shadow .25s ease, opacity .25s ease",
           }}
         >
           Начать путешествие
@@ -260,11 +318,13 @@ export default function WelcomeScreen({
 
           @keyframes adokvaStarsMove {
             from {
-              transform: translate3d(0, 0, 0);
+              transform:
+                translate3d(0, 0, 0);
             }
 
             to {
-              transform: translate3d(-28px, 18px, 0);
+              transform:
+                translate3d(-28px, 18px, 0);
             }
           }
 

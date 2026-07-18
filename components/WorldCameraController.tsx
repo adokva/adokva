@@ -39,20 +39,9 @@ const EARTH_POSITION =
 const EARTH_CAMERA_POSITION =
   new THREE.Vector3(0, 0, 8);
 
-/*
-  Приблизительный визуальный радиус объектов.
-
-  Значения используются только для расчёта
-  безопасной дистанции камеры.
-*/
 const MOON_VISUAL_RADIUS = 0.72;
 const SUN_VISUAL_RADIUS = 1.2;
 
-/*
-  Объект занимает не весь экран,
-  поэтому оставляем свободное пространство
-  вокруг него.
-*/
 const MOON_FRAME_PADDING = 1.55;
 const SUN_FRAME_PADDING = 1.5;
 
@@ -119,13 +108,6 @@ function calculateCameraDistance(
       ) * camera.aspect
     );
 
-  /*
-    На узком мобильном экране
-    горизонтальный угол меньше вертикального.
-
-    Используем меньший угол,
-    чтобы объект всегда помещался целиком.
-  */
   const limitingFov =
     Math.min(
       verticalFov,
@@ -202,33 +184,6 @@ export default function WorldCameraController({
       selectedWorld
     );
 
-  const flightDirection =
-    useRef(
-      new THREE.Vector3(
-        0,
-        0,
-        1
-      )
-    );
-
-  const arcUp =
-    useRef(
-      new THREE.Vector3(
-        0,
-        1,
-        0
-      )
-    );
-
-  const arcSide =
-    useRef(
-      new THREE.Vector3(
-        1,
-        0,
-        0
-      )
-    );
-
   const workingPosition =
     useRef(
       new THREE.Vector3()
@@ -248,7 +203,8 @@ export default function WorldCameraController({
   useEffect(() => {
     if (!enabled) {
       active.current = false;
-      previousWorld.current = null;
+      previousWorld.current =
+        null;
 
       return;
     }
@@ -313,40 +269,6 @@ export default function WorldCameraController({
         EARTH_CAMERA_POSITION
       );
 
-      flightDirection.current
-        .copy(
-          endPosition.current
-        )
-        .sub(
-          startPosition.current
-        )
-        .normalize();
-
-      arcUp.current.set(
-        0,
-        1,
-        0
-      );
-
-      arcSide.current
-        .crossVectors(
-          flightDirection.current,
-          arcUp.current
-        )
-        .normalize();
-
-      if (
-        arcSide.current
-          .lengthSq() <
-        0.0001
-      ) {
-        arcSide.current.set(
-          1,
-          0,
-          0
-        );
-      }
-
       elapsed.current = 0;
       active.current = true;
 
@@ -357,14 +279,6 @@ export default function WorldCameraController({
       worldPosition
     );
 
-    /*
-      Камера подходит к объекту
-      по направлению от объекта к Земле.
-
-      Благодаря этому Луна и Солнце
-      остаются обращены к камере
-      предсказуемой стороной.
-    */
     const approachDirection =
       EARTH_POSITION
         .clone()
@@ -402,82 +316,6 @@ export default function WorldCameraController({
         cameraDistance
       );
 
-    /*
-      Конечная позиция не получает
-      никаких дополнительных смещений.
-
-      Поэтому центр экрана совпадает
-      с центром Луны или Солнца.
-    */
-    flightDirection.current
-      .copy(
-        endPosition.current
-      )
-      .sub(
-        startPosition.current
-      );
-
-    if (
-      flightDirection.current
-        .lengthSq() >
-      0.0001
-    ) {
-      flightDirection.current
-        .normalize();
-    } else {
-      flightDirection.current.set(
-        0,
-        0,
-        1
-      );
-    }
-
-    /*
-      Векторы кинематографической дуги
-      перпендикулярны направлению полёта.
-
-      Дуга действует только в середине
-      анимации и полностью исчезает
-      в конечной точке.
-    */
-    arcSide.current
-      .crossVectors(
-        flightDirection.current,
-        new THREE.Vector3(
-          0,
-          1,
-          0
-        )
-      );
-
-    if (
-      arcSide.current
-        .lengthSq() <
-      0.0001
-    ) {
-      arcSide.current.set(
-        1,
-        0,
-        0
-      );
-    } else {
-      arcSide.current.normalize();
-    }
-
-    arcUp.current
-      .crossVectors(
-        arcSide.current,
-        flightDirection.current
-      )
-      .normalize();
-
-    if (
-      arcUp.current.y < 0
-    ) {
-      arcUp.current
-        .multiplyScalar(-1);
-    }
-
     elapsed.current = 0;
     active.current = true;
   }, [
@@ -499,7 +337,10 @@ export default function WorldCameraController({
     }
 
     elapsed.current +=
-      Math.min(delta, 0.05);
+      Math.min(
+        delta,
+        0.05
+      );
 
     const currentWorld =
       selectedWorldRef.current;
@@ -525,41 +366,6 @@ export default function WorldCameraController({
         startPosition.current,
         endPosition.current,
         eased
-      );
-
-    const arcStrength =
-      Math.sin(
-        progress *
-          Math.PI
-      );
-
-    /*
-      Полёт к объектам получает
-      более заметную дугу.
-
-      Возвращение к Земле остаётся
-      спокойным и плавным.
-    */
-    const verticalArc =
-      currentWorld === "earth"
-        ? 0.45
-        : 0.8;
-
-    const sideArc =
-      currentWorld === "earth"
-        ? 0.12
-        : 0.24;
-
-    workingPosition.current
-      .addScaledVector(
-        arcUp.current,
-        arcStrength *
-          verticalArc
-      )
-      .addScaledVector(
-        arcSide.current,
-        arcStrength *
-          sideArc
       );
 
     camera.position.copy(

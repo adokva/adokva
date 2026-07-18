@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+import { WORLDS } from "@/lib/worlds";
+
 export default function Sidebar() {
   const [open, setOpen] = useState(false);
 
@@ -25,7 +27,7 @@ export default function Sidebar() {
           zIndex: 20,
         }}
       >
-        🌍
+        {WORLDS.earth.emoji}
       </button>
 
       {/* Меню */}
@@ -47,7 +49,15 @@ export default function Sidebar() {
         <MenuItem title="🔍 Найти земляков" />
         <MenuItem title="➕ Добавить себя" />
         <MenuItem title="📊 Статистика" />
-        <MenuItem title="🪐 Планеты" />
+
+        <MenuItem
+          title={`${WORLDS.moon.emoji} ${WORLDS.moon.name}`}
+        />
+
+        <MenuItem
+          title={`${WORLDS.sun.emoji} ${WORLDS.sun.name}`}
+        />
+
         <MenuItem title="🌎 Где были" />
         <MenuItem title="⚙ Настройки" />
       </div>
@@ -55,7 +65,11 @@ export default function Sidebar() {
   );
 }
 
-function MenuItem({ title }: { title: string }) {
+function MenuItem({
+  title,
+}: {
+  title: string;
+}) {
   return (
     <div
       style={{

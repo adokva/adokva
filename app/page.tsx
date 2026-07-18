@@ -68,7 +68,9 @@ export default function Home() {
       : null;
 
   const selectedLocation =
-    selectedResult
+    selectedResult &&
+    selectedResult.type !==
+      "world"
       ? {
           lat:
             selectedResult.lat,
@@ -198,6 +200,17 @@ export default function Home() {
               onSelect={(
                 result
               ) => {
+                if (
+                  result.type ===
+                  "world"
+                ) {
+                  handleSelectWorld(
+                    result.id
+                  );
+
+                  return;
+                }
+
                 setSelectedResult(
                   result
                 );

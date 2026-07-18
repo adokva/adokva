@@ -10,7 +10,7 @@ type Props = {
 };
 
 const WELCOME_EXIT_DURATION =
-  900;
+  620;
 
 export default function WelcomeScreen({
   onJourneyStart,
@@ -27,15 +27,6 @@ export default function WelcomeScreen({
     }
 
     setClosing(true);
-
-    /*
-      Камера начинает движение
-      сразу после нажатия.
-
-      Заставка одновременно
-      плавно растворяется,
-      поэтому задержки больше нет.
-    */
 
     onJourneyStart();
 
@@ -73,20 +64,17 @@ export default function WelcomeScreen({
 
         transform:
           closing
-            ? "scale(1.055)"
+            ? "scale(1.02)"
             : "scale(1)",
-
-        filter:
-          closing
-            ? "blur(3px)"
-            : "blur(0px)",
 
         transition:
           `
-            opacity ${WELCOME_EXIT_DURATION}ms cubic-bezier(.22,1,.36,1),
-            transform ${WELCOME_EXIT_DURATION}ms cubic-bezier(.22,1,.36,1),
-            filter ${WELCOME_EXIT_DURATION}ms ease
+            opacity ${WELCOME_EXIT_DURATION}ms ease,
+            transform ${WELCOME_EXIT_DURATION}ms cubic-bezier(.22,1,.36,1)
           `,
+
+        willChange:
+          "opacity, transform",
       }}
     >
       <div
@@ -117,7 +105,7 @@ export default function WelcomeScreen({
 
           opacity:
             closing
-              ? 0.25
+              ? 0
               : 0.7,
 
           backgroundImage: `
@@ -138,7 +126,7 @@ export default function WelcomeScreen({
               : "adokvaStarsMove 22s linear infinite",
 
           transition:
-            `opacity ${WELCOME_EXIT_DURATION}ms ease`,
+            `opacity 360ms ease`,
         }}
       />
 
@@ -165,14 +153,17 @@ export default function WelcomeScreen({
 
           transform:
             closing
-              ? "translateY(-18px) scale(.98)"
+              ? "translateY(-10px) scale(.99)"
               : "translateY(0) scale(1)",
 
           transition:
             `
-              opacity 560ms ease,
-              transform 760ms cubic-bezier(.22,1,.36,1)
+              opacity 320ms ease,
+              transform 500ms cubic-bezier(.22,1,.36,1)
             `,
+
+          willChange:
+            "opacity, transform",
         }}
       >
         <div
@@ -290,11 +281,11 @@ export default function WelcomeScreen({
 
             opacity:
               closing
-                ? 0.7
+                ? 0
                 : 1,
 
             transition:
-              "transform .25s ease, box-shadow .25s ease, opacity .25s ease",
+              "transform .25s ease, box-shadow .25s ease, opacity .2s ease",
           }}
         >
           Начать путешествие

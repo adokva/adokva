@@ -6,9 +6,17 @@ import {
   people,
 } from "../data/people";
 
+import {
+  WORLDS,
+} from "../lib/worlds";
+
 import type {
   Person,
 } from "../types/person";
+
+import type {
+  WorldId,
+} from "../types/world";
 
 export type PersonSearchResult = {
   type: "person";
@@ -32,19 +40,17 @@ export type CitySearchResult = {
   lon: number;
 };
 
+export type WorldSearchResult = {
+  type: "world";
+
+  id: WorldId;
+  name: string;
+};
+
 export type SearchResult =
   | PersonSearchResult
-  | CitySearchResult;
-
-/*
-  Русские варианты названий городов.
-
-  Основные данные остаются
-  в data/locations.ts на английском.
-
-  Этот словарь нужен только
-  для многоязычного поиска.
-*/
+  | CitySearchResult
+  | WorldSearchResult;
 
 const CITY_ALIASES: Record<
   string,
@@ -135,8 +141,6 @@ const CITY_ALIASES: Record<
 
   "Hong Kong": [
     "гонконг",
-    "гонконг",
-    "гонконг",
   ],
 
   Beijing: [
@@ -149,17 +153,12 @@ const CITY_ALIASES: Record<
 
   Tokyo: [
     "токио",
-    "токио",
   ],
 
   Sydney: [
     "сидней",
   ],
 };
-
-/*
-  Русские варианты стран.
-*/
 
 const COUNTRY_ALIASES: Record<
   string,
@@ -253,6 +252,32 @@ const COUNTRY_ALIASES: Record<
 
   Australia: [
     "австралия",
+  ],
+};
+
+const WORLD_ALIASES: Record<
+  WorldId,
+  string[]
+> = {
+  earth: [
+    "earth",
+    "земля",
+    "планета земля",
+    "мир земля",
+  ],
+
+  moon: [
+    "moon",
+    "луна",
+    "спутник земли",
+    "спутник",
+  ],
+
+  sun: [
+    "sun",
+    "солнце",
+    "звезда",
+    "солнечная система",
   ],
 };
 
@@ -406,6 +431,62 @@ export function searchCities(
     }));
 }
 
+export function searchWorlds(
+  query: string
+): WorldSearchResult[] {
+  const normalizedQuery =
+    normalizeSearchText(
+      query
+    );
+
+  if (!normalizedQuery) {
+    return [];
+  }
+
+  return Object.values(
+    WORLDS
+  ).flatMap(
+    (
+      world
+    ): WorldSearchResult[] => {
+      const worldId =
+        world.id;
+
+      const aliases =
+        WORLD_ALIASES[
+          worldId
+        ] ?? [];
+
+      const matches =
+        includesQuery(
+          world.name,
+          normalizedQuery
+        ) ||
+        includesQuery(
+          worldId,
+          normalizedQuery
+        ) ||
+        aliasesIncludeQuery(
+          aliases,
+          normalizedQuery
+        );
+
+      if (!matches) {
+        return [];
+      }
+
+      return [
+        {
+          type: "world",
+
+          id: worldId,
+          name: world.name,
+        },
+      ];
+    }
+  );
+}
+
 function cityStartsWithQuery(
   city: CitySearchResult,
   query: string
@@ -447,11 +528,15 @@ export function searchAll(
     return [];
   }
 
+  const worldResults =
+    searchWorlds(query);
+
   const personResults:
     PersonSearchResult[] =
     searchPeople(query).map(
       (person) => ({
-        type: "person" as const,
+        type:
+          "person" as const,
 
         id: person.id,
         name: person.name,
@@ -505,6 +590,7 @@ export function searchAll(
     );
 
   return [
+    ...worldResults,
     ...sortedCities,
     ...personResults,
   ].slice(

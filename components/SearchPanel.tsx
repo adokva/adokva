@@ -11,6 +11,7 @@ import {
 
 import type {
   SearchResult,
+  WorldSearchResult,
 } from "../services/search";
 
 export type SelectedSearchResult =
@@ -31,6 +32,34 @@ type Props = {
       SelectedSearchResult
   ) => void;
 };
+
+function getWorldIcon(
+  world: WorldSearchResult
+) {
+  if (world.id === "earth") {
+    return "🌍";
+  }
+
+  if (world.id === "moon") {
+    return "🌙";
+  }
+
+  return "☀️";
+}
+
+function getWorldDescription(
+  world: WorldSearchResult
+) {
+  if (world.id === "earth") {
+    return "Планета";
+  }
+
+  if (world.id === "moon") {
+    return "Естественный спутник";
+  }
+
+  return "Звезда";
+}
 
 export default function SearchPanel({
   onSelect,
@@ -114,7 +143,7 @@ export default function SearchPanel({
               event.target.value
             );
           }}
-          placeholder="Человек, город или страна..."
+          placeholder="Мир, человек, город или страна..."
           style={{
             flex: 1,
             minWidth: 0,
@@ -148,9 +177,9 @@ export default function SearchPanel({
             lineHeight: 1.5,
           }}
         >
-          Например: Dubai,
-          Moscow, Tokyo или имя
-          человека
+          Например: Луна,
+          Солнце, Dubai,
+          Moscow или имя человека
         </div>
       )}
 
@@ -172,6 +201,24 @@ export default function SearchPanel({
               result.type ===
               "city";
 
+            const isWorld =
+              result.type ===
+              "world";
+
+            const border =
+              isWorld
+                ? "1px solid rgba(178,127,255,.24)"
+                : isCity
+                  ? "1px solid rgba(79,181,255,.16)"
+                  : "1px solid rgba(255,255,255,.06)";
+
+            const background =
+              isWorld
+                ? "rgba(115,72,196,.12)"
+                : isCity
+                  ? "rgba(30,118,196,.09)"
+                  : "rgba(255,255,255,.045)";
+
             return (
               <button
                 type="button"
@@ -192,10 +239,7 @@ export default function SearchPanel({
 
                   borderRadius: 20,
 
-                  border:
-                    isCity
-                      ? "1px solid rgba(79,181,255,.16)"
-                      : "1px solid rgba(255,255,255,.06)",
+                  border,
 
                   cursor:
                     "pointer",
@@ -203,10 +247,7 @@ export default function SearchPanel({
                   textAlign:
                     "left",
 
-                  background:
-                    isCity
-                      ? "rgba(30,118,196,.09)"
-                      : "rgba(255,255,255,.045)",
+                  background,
 
                   color: "white",
 
@@ -224,14 +265,18 @@ export default function SearchPanel({
                   event.currentTarget
                     .style
                     .background =
-                    isCity
-                      ? "rgba(38,151,240,.18)"
-                      : "rgba(52,130,255,.14)";
+                    isWorld
+                      ? "rgba(140,91,230,.22)"
+                      : isCity
+                        ? "rgba(38,151,240,.18)"
+                        : "rgba(52,130,255,.14)";
 
                   event.currentTarget
                     .style
                     .borderColor =
-                    "rgba(93,177,255,.28)";
+                    isWorld
+                      ? "rgba(190,145,255,.42)"
+                      : "rgba(93,177,255,.28)";
                 }}
                 onMouseLeave={(
                   event
@@ -244,16 +289,16 @@ export default function SearchPanel({
                   event.currentTarget
                     .style
                     .background =
-                    isCity
-                      ? "rgba(30,118,196,.09)"
-                      : "rgba(255,255,255,.045)";
+                    background;
 
                   event.currentTarget
                     .style
                     .borderColor =
-                    isCity
-                      ? "rgba(79,181,255,.16)"
-                      : "rgba(255,255,255,.06)";
+                    isWorld
+                      ? "rgba(178,127,255,.24)"
+                      : isCity
+                        ? "rgba(79,181,255,.16)"
+                        : "rgba(255,255,255,.06)";
                 }}
               >
                 <div
@@ -278,9 +323,11 @@ export default function SearchPanel({
                         700,
                     }}
                   >
-                    {isCity
-                      ? `🏙️ ${result.city}`
-                      : `👤 ${result.name}`}
+                    {isWorld
+                      ? `${getWorldIcon(result)} ${result.name}`
+                      : isCity
+                        ? `🏙️ ${result.city}`
+                        : `👤 ${result.name}`}
                   </div>
 
                   <div
@@ -294,14 +341,18 @@ export default function SearchPanel({
                         999,
 
                       background:
-                        isCity
-                          ? "rgba(55,169,255,.13)"
-                          : "rgba(255,255,255,.06)",
+                        isWorld
+                          ? "rgba(176,121,255,.16)"
+                          : isCity
+                            ? "rgba(55,169,255,.13)"
+                            : "rgba(255,255,255,.06)",
 
                       color:
-                        isCity
-                          ? "rgba(156,217,255,.9)"
-                          : "rgba(225,235,250,.56)",
+                        isWorld
+                          ? "rgba(218,190,255,.95)"
+                          : isCity
+                            ? "rgba(156,217,255,.9)"
+                            : "rgba(225,235,250,.56)",
 
                       fontSize: 11,
 
@@ -312,9 +363,11 @@ export default function SearchPanel({
                         0.4,
                     }}
                   >
-                    {isCity
-                      ? "ГОРОД"
-                      : "ЧЕЛОВЕК"}
+                    {isWorld
+                      ? "МИР"
+                      : isCity
+                        ? "ГОРОД"
+                        : "ЧЕЛОВЕК"}
                   </div>
                 </div>
 
@@ -328,9 +381,11 @@ export default function SearchPanel({
                       "rgba(225,235,250,.66)",
                   }}
                 >
-                  {isCity
-                    ? `📍 ${result.country}`
-                    : `📍 ${result.city}, ${result.country}`}
+                  {isWorld
+                    ? `✨ ${getWorldDescription(result)}`
+                    : isCity
+                      ? `📍 ${result.country}`
+                      : `📍 ${result.city}, ${result.country}`}
                 </div>
               </button>
             );

@@ -19,16 +19,16 @@ type Props = {
 
 const START_POSITION =
   new THREE.Vector3(
-    14,
-    7,
-    20
+    12,
+    6,
+    17
   );
 
 const CONTROL_POSITION =
   new THREE.Vector3(
-    5.8,
-    3.1,
-    12.2
+    5.2,
+    2.7,
+    11
   );
 
 const END_POSITION =
@@ -45,28 +45,18 @@ const EARTH_TARGET =
     0
   );
 
-const INTRO_DURATION =
-  2.55;
+const INTRO_DURATION_MS =
+  1750;
 
-function easeInOutCubic(
+function easeOutCubic(
   value: number
 ) {
-  if (value < 0.5) {
-    return (
-      4 *
-      value *
-      value *
-      value
-    );
-  }
-
   return (
     1 -
     Math.pow(
-      -2 * value + 2,
+      1 - value,
       3
-    ) /
-      2
+    )
   );
 }
 
@@ -78,8 +68,10 @@ export default function CameraIntro({
     camera,
   } = useThree();
 
-  const elapsed =
-    useRef(0);
+  const startTime =
+    useRef<number | null>(
+      null
+    );
 
   const finished =
     useRef(false);
@@ -105,11 +97,7 @@ export default function CameraIntro({
     );
 
   useEffect(() => {
-    if (active) {
-      return;
-    }
-
-    elapsed.current = 0;
+    startTime.current = null;
     finished.current = false;
 
     camera.position.copy(
@@ -119,14 +107,12 @@ export default function CameraIntro({
     camera.lookAt(
       EARTH_TARGET
     );
-
-    camera.updateProjectionMatrix();
   }, [
     active,
     camera,
   ]);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (
       !active ||
       finished.current
@@ -134,28 +120,32 @@ export default function CameraIntro({
       return;
     }
 
-    elapsed.current +=
-      Math.min(
-        delta,
-        0.05
-      );
+    const currentTime =
+      performance.now();
+
+    if (
+      startTime.current ===
+      null
+    ) {
+      startTime.current =
+        currentTime;
+    }
+
+    const elapsedTime =
+      currentTime -
+      startTime.current;
 
     const rawProgress =
       Math.min(
-        elapsed.current /
-          INTRO_DURATION,
+        elapsedTime /
+          INTRO_DURATION_MS,
         1
       );
 
     const progress =
-      easeInOutCubic(
+      easeOutCubic(
         rawProgress
       );
-
-    /*
-      Плавная кинематографическая
-      дуга по кривой Безье.
-    */
 
     firstPart.current
       .lerpVectors(
@@ -178,29 +168,16 @@ export default function CameraIntro({
         progress
       );
 
-    /*
-      Небольшой дополнительный
-      подъём камеры в середине пути.
-    */
-
     curvedPosition.current.y +=
       Math.sin(
         rawProgress *
           Math.PI
       ) *
-      0.28;
+      0.2;
 
     camera.position.copy(
       curvedPosition.current
     );
-
-    /*
-      Камера всё время спокойно
-      смотрит на Землю.
-
-      Это убирает рывок взгляда
-      в конце интро.
-    */
 
     lookTarget.current.set(
       0,
@@ -208,7 +185,7 @@ export default function CameraIntro({
         rawProgress *
           Math.PI
       ) *
-        0.08,
+        0.05,
       0
     );
 
@@ -229,8 +206,6 @@ export default function CameraIntro({
     camera.lookAt(
       EARTH_TARGET
     );
-
-    camera.updateProjectionMatrix();
 
     onComplete();
   });

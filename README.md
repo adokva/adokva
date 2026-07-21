@@ -34,3 +34,87 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+# ADOKVA
+
+Интерактивная 3D-платформа для исследования Земли.
+
+---
+
+## Текущее состояние проекта
+
+Дата обновления: июль 2026
+
+Статус: Активная разработка
+
+Problems: **0**
+
+---
+
+## Что уже реализовано
+
+- ✅ Next.js + React + TypeScript
+- ✅ Three.js + React Three Fiber
+- ✅ 3D-глобус
+- ✅ Атмосфера
+- ✅ Облака
+- ✅ Ночные огни
+- ✅ Космос
+- ✅ Солнце
+- ✅ Луна
+- ✅ Марс
+- ✅ Intro камеры
+- ✅ Полёты камеры
+- ✅ Модульный Camera Engine
+- ✅ Документация проекта
+
+---
+
+## Следующая задача
+
+Продолжить развитие Camera Engine.
+
+Основная цель:
+
+- убрать остаточный крен горизонта;
+- сохранить север сверху;
+- сделать полёты полностью естественными;
+- не нарушить существующую архитектуру.
+
+---
+
+## Главное правило проекта
+
+Работаем по правилу ЙЙ.
+
+1. Один файл.
+2. Полная замена файла.
+3. Ctrl+A
+4. Ctrl+V
+5. Ctrl+S
+6. Проверка Problems.
+
+---
+
+## Принцип разработки
+
+Не ломать работающий код.
+
+Любое изменение выполняется небольшими безопасными шагами.
+
+---
+
+## Документация
+
+Вся история проекта находится в папке:
+
+ADOKVA_HISTORY/
+
+---
+
+## Конец текущего этапа
+
+Проект стабилен.
+
+Problems = 0.
+
+Следующий этап — развитие Camera Engine и дальнейшее расширение возможностей ADOKVA.

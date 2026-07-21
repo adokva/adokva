@@ -29,6 +29,92 @@ type Props = {
 const WORLD_RETURN_DURATION =
   2.3;
 
+const EARTH_CENTER =
+  new THREE.Vector3(0, 0, 0);
+
+const WORLD_NORTH =
+  new THREE.Vector3(0, 1, 0);
+
+const FALLBACK_UP =
+  new THREE.Vector3(0, 0, 1);
+
+const SECOND_FALLBACK_UP =
+  new THREE.Vector3(1, 0, 0);
+
+const DEFAULT_DISTANCE = 8;
+
+const SELECTED_DISTANCE =
+  5.75;
+
+const DISTANCE_ANIMATION_DURATION =
+  1.3;
+
+function stabilizeCameraOrientation(
+  camera: THREE.Camera,
+  viewDirection: THREE.Vector3,
+  stableUp: THREE.Vector3
+) {
+  viewDirection
+    .copy(EARTH_CENTER)
+    .sub(camera.position);
+
+  if (
+    viewDirection.lengthSq() <
+    0.000001
+  ) {
+    return;
+  }
+
+  viewDirection.normalize();
+
+  stableUp
+    .copy(WORLD_NORTH)
+    .addScaledVector(
+      viewDirection,
+      -WORLD_NORTH.dot(
+        viewDirection
+      )
+    );
+
+  if (
+    stableUp.lengthSq() <
+    0.000001
+  ) {
+    stableUp
+      .copy(FALLBACK_UP)
+      .addScaledVector(
+        viewDirection,
+        -FALLBACK_UP.dot(
+          viewDirection
+        )
+      );
+  }
+
+  if (
+    stableUp.lengthSq() <
+    0.000001
+  ) {
+    stableUp
+      .copy(
+        SECOND_FALLBACK_UP
+      )
+      .addScaledVector(
+        viewDirection,
+        -SECOND_FALLBACK_UP.dot(
+          viewDirection
+        )
+      );
+  }
+
+  stableUp.normalize();
+
+  camera.up.copy(stableUp);
+
+  camera.lookAt(
+    EARTH_CENTER
+  );
+}
+
 export default function FocusOrbitControls({
   enabled,
   selected,
@@ -36,7 +122,8 @@ export default function FocusOrbitControls({
   const controls =
     useRef<OrbitControlsImpl>(null);
 
-  const { camera } = useThree();
+  const { camera } =
+    useThree();
 
   const initialized =
     useRef(false);
@@ -48,6 +135,9 @@ export default function FocusOrbitControls({
     useRef(enabled);
 
   const previousSelected =
+    useRef(selected);
+
+  const selectedRef =
     useRef(selected);
 
   const animationActive =
@@ -72,6 +162,21 @@ export default function FocusOrbitControls({
       new THREE.Vector3()
     );
 
+  const workingDirection =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const cameraViewDirection =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const cameraStableUp =
+    useRef(
+      new THREE.Vector3()
+    );
+
   const [
     animating,
     setAnimating,
@@ -82,19 +187,10 @@ export default function FocusOrbitControls({
     setControlsReady,
   ] = useState(enabled);
 
-  /*
-    Когда пользователь улетает
-    к Луне или Солнцу,
-    OrbitControls полностью
-    отключаются и удаляются.
-
-    При возвращении к Земле
-    они включаются только после
-    завершения полёта камеры.
-
-    Поэтому две системы больше
-    не двигают камеру одновременно.
-  */
+  useEffect(() => {
+    selectedRef.current =
+      selected;
+  }, [selected]);
 
   useEffect(() => {
     const wasEnabled =
@@ -104,7 +200,8 @@ export default function FocusOrbitControls({
       enabled;
 
     if (!enabled) {
-      initialized.current = false;
+      initialized.current =
+        false;
 
       animationActive.current =
         false;
@@ -112,7 +209,8 @@ export default function FocusOrbitControls({
       waitingForWorldReturn.current =
         false;
 
-      returnDelayElapsed.current = 0;
+      returnDelayElapsed.current =
+        0;
 
       setAnimating(false);
       setControlsReady(false);
@@ -120,16 +218,9 @@ export default function FocusOrbitControls({
       return;
     }
 
-    /*
-      Первый запуск после Welcome Screen
-      не требует задержки.
-
-      Задержка нужна только после
-      возвращения от другого мира.
-    */
-
     if (!hasBeenEnabled.current) {
-      hasBeenEnabled.current = true;
+      hasBeenEnabled.current =
+        true;
 
       setControlsReady(true);
 
@@ -137,7 +228,8 @@ export default function FocusOrbitControls({
     }
 
     if (!wasEnabled && enabled) {
-      initialized.current = false;
+      initialized.current =
+        false;
 
       animationActive.current =
         false;
@@ -145,21 +237,13 @@ export default function FocusOrbitControls({
       setAnimating(false);
       setControlsReady(false);
 
-      returnDelayElapsed.current = 0;
+      returnDelayElapsed.current =
+        0;
 
       waitingForWorldReturn.current =
         true;
     }
   }, [enabled]);
-
-  /*
-    Отсчитываем время возврата
-    камеры к Земле.
-
-    После окончания полёта
-    создаются совершенно новые
-    OrbitControls без старой инерции.
-  */
 
   useFrame((_, delta) => {
     if (
@@ -170,10 +254,7 @@ export default function FocusOrbitControls({
     }
 
     returnDelayElapsed.current +=
-      Math.min(
-        delta,
-        0.05
-      );
+      Math.min(delta, 0.05);
 
     if (
       returnDelayElapsed.current <
@@ -185,16 +266,11 @@ export default function FocusOrbitControls({
     waitingForWorldReturn.current =
       false;
 
-    returnDelayElapsed.current = 0;
+    returnDelayElapsed.current =
+      0;
 
     setControlsReady(true);
   });
-
-  /*
-    Инициализация новых Controls
-    после первого запуска или
-    после завершения возврата.
-  */
 
   useEffect(() => {
     if (
@@ -204,43 +280,41 @@ export default function FocusOrbitControls({
       return;
     }
 
-    initialized.current = true;
+    initialized.current =
+      true;
 
     previousSelected.current =
-      selected;
+      selectedRef.current;
 
     animationActive.current =
       false;
 
     setAnimating(false);
 
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
+    );
+
     if (controls.current) {
-      controls.current.target.set(
-        0,
-        0,
-        0
+      controls.current.target.copy(
+        EARTH_CENTER
       );
 
       controls.current.update();
     }
 
-    camera.lookAt(
-      0,
-      0,
-      0
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
     );
   }, [
     camera,
     controlsReady,
     enabled,
-    selected,
   ]);
-
-  /*
-    Фокус камеры на выбранном
-    человеке или возврат от него
-    к обычной дистанции Земли.
-  */
 
   useEffect(() => {
     if (
@@ -265,33 +339,35 @@ export default function FocusOrbitControls({
       camera.position
     );
 
-    const direction =
-      camera.position
-        .clone();
+    workingDirection.current
+      .copy(camera.position)
+      .sub(EARTH_CENTER);
 
     if (
-      direction.lengthSq() <
-      0.0001
+      workingDirection.current
+        .lengthSq() < 0.0001
     ) {
-      direction.set(
+      workingDirection.current.set(
         0,
         0,
         1
       );
     }
 
-    direction.normalize();
+    workingDirection.current.normalize();
 
     const targetDistance =
       selected
-        ? 5.75
-        : 8;
+        ? SELECTED_DISTANCE
+        : DEFAULT_DISTANCE;
 
-    endPosition.current.copy(
-      direction.multiplyScalar(
-        targetDistance
+    endPosition.current
+      .copy(
+        workingDirection.current
       )
-    );
+      .multiplyScalar(
+        targetDistance
+      );
 
     elapsed.current = 0;
 
@@ -306,11 +382,6 @@ export default function FocusOrbitControls({
     selected,
   ]);
 
-  /*
-    Плавное приближение Земли
-    при выборе человека.
-  */
-
   useFrame((_, delta) => {
     if (
       !enabled ||
@@ -321,25 +392,14 @@ export default function FocusOrbitControls({
     }
 
     elapsed.current +=
-      Math.min(
-        delta,
-        0.05
-      );
-
-    const duration = 1.3;
+      Math.min(delta, 0.05);
 
     const progress =
       Math.min(
         elapsed.current /
-          duration,
+          DISTANCE_ANIMATION_DURATION,
         1
       );
-
-    /*
-      Smoothstep:
-      плавное начало и
-      плавная остановка.
-    */
 
     const eased =
       progress *
@@ -352,10 +412,10 @@ export default function FocusOrbitControls({
       eased
     );
 
-    camera.lookAt(
-      0,
-      0,
-      0
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
     );
 
     if (progress < 1) {
@@ -366,10 +426,10 @@ export default function FocusOrbitControls({
       endPosition.current
     );
 
-    camera.lookAt(
-      0,
-      0,
-      0
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
     );
 
     animationActive.current =
@@ -378,25 +438,42 @@ export default function FocusOrbitControls({
     setAnimating(false);
 
     if (controls.current) {
-      controls.current.target.set(
-        0,
-        0,
-        0
+      controls.current.target.copy(
+        EARTH_CENTER
       );
 
       controls.current.update();
     }
+
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
+    );
   });
 
   /*
-    Пока камера возвращается
-    от Луны или Солнца,
-    OrbitControls вообще
-    не существуют в сцене.
+    Выполняется после OrbitControls.
 
-    Это также полностью удаляет
-    старую инерцию вращения.
+    Камера всегда смотрит на центр
+    Земли, а её верх выравнивается
+    относительно мирового севера.
   */
+
+  useFrame(() => {
+    if (
+      !enabled ||
+      !controlsReady
+    ) {
+      return;
+    }
+
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
+    );
+  }, 1);
 
   if (
     !enabled ||

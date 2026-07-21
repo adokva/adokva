@@ -24,20 +24,28 @@ import {
 
 import AnimatedStars from "./AnimatedStars";
 import CameraIntro from "./CameraIntro";
+import SpaceBackground from "./SpaceBackground";
 import FlightCamera from "./FlightCamera";
 import FocusOrbitControls from "./FocusOrbitControls";
 import Globe from "./Globe";
+import SatelliteManager from "./SatelliteManager";
+
 
 import Moon, {
   getMoonPosition,
 } from "./Moon";
 
 import Sun from "./Sun";
+import Mars from "./Mars";
 import WorldCameraController from "./WorldCameraController";
 
 import type {
   SelectedWorld,
 } from "../types/world";
+
+import {
+  SUN_POSITION,
+} from "../lib/space";
 
 type Props = {
   introStarted: boolean;
@@ -443,8 +451,9 @@ export default function CanvasScene({
   ] = useState(false);
 
   const exploringWorld =
-    selectedWorld === "sun" ||
-    selectedWorld === "moon";
+  selectedWorld === "sun" ||
+  selectedWorld === "moon" ||
+  selectedWorld === "mars";
 
   useEffect(() => {
     if (
@@ -500,7 +509,13 @@ export default function CanvasScene({
       <ambientLight
         intensity={0.035}
       />
-
+<pointLight
+  position={[...SUN_POSITION]}
+  intensity={180}
+  distance={80}
+  decay={2}
+  color="#fff7e6"
+/>
       <SceneDiagnostics
         introStarted={
           introStarted
@@ -510,7 +525,11 @@ export default function CanvasScene({
         }
       />
 
-      <AnimatedStars />
+      <SpaceBackground />
+
+<AnimatedStars />
+
+
 
       <Globe
         target={
@@ -519,7 +538,7 @@ export default function CanvasScene({
             : selectedLocation
         }
       />
-
+<SatelliteManager />
       <Sun
         onSelect={() => {
           onSelectWorld(
@@ -535,7 +554,13 @@ export default function CanvasScene({
           );
         }}
       />
-
+<Mars
+  onSelect={() => {
+    onSelectWorld(
+      "mars"
+    );
+  }}
+/>
       <CameraIntro
         active={
           introStarted
@@ -579,6 +604,7 @@ export default function CanvasScene({
           );
         }}
       />
+
 
       <FocusOrbitControls
         enabled={

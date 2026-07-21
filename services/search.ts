@@ -279,6 +279,12 @@ const WORLD_ALIASES: Record<
     "звезда",
     "солнечная система",
   ],
+    mars: [
+    "mars",
+    "марс",
+    "красная планета",
+    "планета марс",
+  ],
 };
 
 function normalizeSearchText(

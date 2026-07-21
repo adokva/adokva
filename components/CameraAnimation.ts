@@ -1,0 +1,17 @@
+export const CAMERA_FLIGHT_DURATION =
+  2600;
+
+export const CAMERA_ARC_HEIGHT =
+  1.2;
+
+export function easeInOutCubic(
+  t: number
+) {
+  return t < 0.5
+    ? 4 * t * t * t
+    : 1 -
+        Math.pow(
+          -2 * t + 2,
+          3
+        ) / 2;
+}

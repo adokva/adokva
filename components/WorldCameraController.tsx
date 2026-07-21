@@ -18,6 +18,7 @@ import type {
 } from "../types/world";
 
 import {
+  MARS_POSITION,
   SUN_POSITION,
 } from "../lib/space";
 
@@ -41,12 +42,15 @@ const EARTH_CAMERA_POSITION =
 
 const MOON_VISUAL_RADIUS = 0.72;
 const SUN_VISUAL_RADIUS = 1.2;
+const MARS_VISUAL_RADIUS = 0.8;
 
 const MOON_FRAME_PADDING = 1.55;
 const SUN_FRAME_PADDING = 1.5;
+const MARS_FRAME_PADDING = 1.6;
 
 const EARTH_FLIGHT_DURATION = 2.15;
 const WORLD_FLIGHT_DURATION = 2.75;
+const MARS_FLIGHT_DURATION = 3.4;
 
 const clamp01 = (
   value: number
@@ -200,9 +204,21 @@ export default function WorldCameraController({
       []
     );
 
+  const marsPosition =
+    useMemo(
+      () =>
+        new THREE.Vector3(
+          MARS_POSITION[0],
+          MARS_POSITION[1],
+          MARS_POSITION[2]
+        ),
+      []
+    );
+
   useEffect(() => {
     if (!enabled) {
       active.current = false;
+
       previousWorld.current =
         null;
 
@@ -236,7 +252,9 @@ export default function WorldCameraController({
     let worldRadius = 0;
     let framePadding = 1;
 
-    if (selectedWorld === "sun") {
+    if (
+      selectedWorld === "sun"
+    ) {
       worldPosition.copy(
         sunPosition
       );
@@ -260,6 +278,18 @@ export default function WorldCameraController({
 
       framePadding =
         MOON_FRAME_PADDING;
+    } else if (
+      selectedWorld === "mars"
+    ) {
+      worldPosition.copy(
+        marsPosition
+      );
+
+      worldRadius =
+        MARS_VISUAL_RADIUS;
+
+      framePadding =
+        MARS_FRAME_PADDING;
     } else {
       endLookTarget.current.copy(
         EARTH_POSITION
@@ -287,8 +317,7 @@ export default function WorldCameraController({
         );
 
     if (
-      approachDirection
-        .lengthSq() <
+      approachDirection.lengthSq() <
       0.0001
     ) {
       approachDirection.set(
@@ -321,6 +350,7 @@ export default function WorldCameraController({
   }, [
     camera,
     enabled,
+    marsPosition,
     moonPosition,
     selectedWorld,
     size.height,
@@ -345,10 +375,21 @@ export default function WorldCameraController({
     const currentWorld =
       selectedWorldRef.current;
 
-    const duration =
-      currentWorld === "earth"
-        ? EARTH_FLIGHT_DURATION
-        : WORLD_FLIGHT_DURATION;
+    let duration =
+      WORLD_FLIGHT_DURATION;
+
+    if (
+      currentWorld === "earth" ||
+      currentWorld === null
+    ) {
+      duration =
+        EARTH_FLIGHT_DURATION;
+    } else if (
+      currentWorld === "mars"
+    ) {
+      duration =
+        MARS_FLIGHT_DURATION;
+    }
 
     const progress =
       clamp01(

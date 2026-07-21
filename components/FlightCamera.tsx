@@ -12,6 +12,13 @@ import {
 
 import * as THREE from "three";
 
+import {
+  clamp01,
+  easeInOutCubic,
+  easeInOutSine,
+  easeOutCubic,
+} from "./CameraEasing";
+
 export type FlightTarget = {
   lat: number;
   lon: number;
@@ -25,16 +32,23 @@ type Props = {
 };
 
 const EARTH_CENTER =
-  new THREE.Vector3(
-    0,
-    0,
-    0
-  );
+  new THREE.Vector3(0, 0, 0);
+
+const WORLD_NORTH =
+  new THREE.Vector3(0, 1, 0);
+
+const FALLBACK_UP =
+  new THREE.Vector3(0, 0, 1);
+
+const SECOND_FALLBACK_UP =
+  new THREE.Vector3(1, 0, 0);
 
 const EARTH_RADIUS = 2;
 
 const DEFAULT_CAMERA_DISTANCE = 8;
-const FOCUSED_CAMERA_DISTANCE = 6.25;
+
+const FOCUSED_CAMERA_DISTANCE =
+  6.25;
 
 const MINIMUM_SAFE_DISTANCE =
   EARTH_RADIUS * 2.4;
@@ -46,86 +60,16 @@ const MAX_ARC_HEIGHT = 2.15;
 const DEG_TO_RAD =
   Math.PI / 180;
 
-function clamp01(
-  value: number
-) {
-  return Math.min(
-    Math.max(
-      value,
-      0
-    ),
-    1
-  );
-}
-
-function easeInOutCubic(
-  value: number
-) {
-  const progress =
-    clamp01(value);
-
-  if (progress < 0.5) {
-    return (
-      4 *
-      progress *
-      progress *
-      progress
-    );
-  }
-
-  return (
-    1 -
-    Math.pow(
-      -2 * progress + 2,
-      3
-    ) /
-      2
-  );
-}
-
-function easeInOutSine(
-  value: number
-) {
-  const progress =
-    clamp01(value);
-
-  return (
-    -(
-      Math.cos(
-        Math.PI * progress
-      ) -
-      1
-    ) / 2
-  );
-}
-
-function easeOutCubic(
-  value: number
-) {
-  const progress =
-    clamp01(value);
-
-  return (
-    1 -
-    Math.pow(
-      1 - progress,
-      3
-    )
-  );
-}
-
 function latLonToVector3(
   lat: number,
   lon: number,
   radius: number
 ) {
   const phi =
-    (90 - lat) *
-    DEG_TO_RAD;
+    (90 - lat) * DEG_TO_RAD;
 
   const theta =
-    (lon + 180) *
-    DEG_TO_RAD;
+    (lon + 180) * DEG_TO_RAD;
 
   return new THREE.Vector3(
     -radius *
@@ -149,22 +93,16 @@ function isSameTarget(
     first === null ||
     second === null
   ) {
-    return (
-      first === second
-    );
+    return first === second;
   }
 
   return (
     Math.abs(
-      first.lat -
-        second.lat
-    ) <
-      0.0001 &&
+      first.lat - second.lat
+    ) < 0.0001 &&
     Math.abs(
-      first.lon -
-        second.lon
-    ) <
-      0.0001
+      first.lon - second.lon
+    ) < 0.0001
   );
 }
 
@@ -259,15 +197,80 @@ function slerpDirection(
   return result;
 }
 
+function stabilizeCameraOrientation(
+  camera: THREE.Camera,
+  viewDirection: THREE.Vector3,
+  stableUp: THREE.Vector3
+) {
+  viewDirection
+    .copy(EARTH_CENTER)
+    .sub(camera.position);
+
+  if (
+    viewDirection.lengthSq() <
+    0.000001
+  ) {
+    return;
+  }
+
+  viewDirection.normalize();
+
+  stableUp
+    .copy(WORLD_NORTH)
+    .addScaledVector(
+      viewDirection,
+      -WORLD_NORTH.dot(
+        viewDirection
+      )
+    );
+
+  if (
+    stableUp.lengthSq() <
+    0.000001
+  ) {
+    stableUp
+      .copy(FALLBACK_UP)
+      .addScaledVector(
+        viewDirection,
+        -FALLBACK_UP.dot(
+          viewDirection
+        )
+      );
+  }
+
+  if (
+    stableUp.lengthSq() <
+    0.000001
+  ) {
+    stableUp
+      .copy(
+        SECOND_FALLBACK_UP
+      )
+      .addScaledVector(
+        viewDirection,
+        -SECOND_FALLBACK_UP.dot(
+          viewDirection
+        )
+      );
+  }
+
+  stableUp.normalize();
+
+  camera.up.copy(stableUp);
+
+  camera.lookAt(
+    EARTH_CENTER
+  );
+}
+
 export default function FlightCamera({
   target,
   enabled,
   onFlightStart,
   onFlightComplete,
 }: Props) {
-  const {
-    camera,
-  } = useThree();
+  const { camera } =
+    useThree();
 
   const active =
     useRef(false);
@@ -276,9 +279,7 @@ export default function FlightCamera({
     useRef(0);
 
   const previousTarget =
-    useRef<FlightTarget>(
-      null
-    );
+    useRef<FlightTarget>(null);
 
   const startPosition =
     useRef(
@@ -310,6 +311,16 @@ export default function FlightCamera({
       new THREE.Vector3()
     );
 
+  const cameraViewDirection =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const cameraStableUp =
+    useRef(
+      new THREE.Vector3()
+    );
+
   const startDistance =
     useRef(
       DEFAULT_CAMERA_DISTANCE
@@ -324,14 +335,10 @@ export default function FlightCamera({
     useRef(0);
 
   const onFlightStartRef =
-    useRef(
-      onFlightStart
-    );
+    useRef(onFlightStart);
 
   const onFlightCompleteRef =
-    useRef(
-      onFlightComplete
-    );
+    useRef(onFlightComplete);
 
   useEffect(() => {
     onFlightStartRef.current =
@@ -367,7 +374,6 @@ export default function FlightCamera({
 
     if (!target) {
       active.current = false;
-
       return;
     }
 
@@ -387,14 +393,11 @@ export default function FlightCamera({
       .copy(
         startPosition.current
       )
-      .sub(
-        EARTH_CENTER
-      );
+      .sub(EARTH_CENTER);
 
     if (
       startDirection.current
-        .lengthSq() <
-      0.0001
+        .lengthSq() < 0.0001
     ) {
       startDirection.current.set(
         0,
@@ -438,6 +441,7 @@ export default function FlightCamera({
       );
 
     elapsed.current = 0;
+
     active.current = true;
 
     onFlightStartRef.current?.();
@@ -456,10 +460,7 @@ export default function FlightCamera({
     }
 
     elapsed.current +=
-      Math.min(
-        delta,
-        0.05
-      );
+      Math.min(delta, 0.05);
 
     const progress =
       clamp01(
@@ -468,14 +469,10 @@ export default function FlightCamera({
       );
 
     const rotationProgress =
-      easeInOutCubic(
-        progress
-      );
+      easeInOutCubic(progress);
 
     const distanceProgress =
-      easeInOutSine(
-        progress
-      );
+      easeInOutSine(progress);
 
     slerpDirection(
       startDirection.current,
@@ -501,8 +498,7 @@ export default function FlightCamera({
 
     const arcEnvelope =
       Math.sin(
-        progress *
-          Math.PI
+        progress * Math.PI
       );
 
     const launchBoost =
@@ -549,8 +545,10 @@ export default function FlightCamera({
       workingPosition.current
     );
 
-    camera.lookAt(
-      EARTH_CENTER
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
     );
 
     if (progress < 1) {
@@ -561,8 +559,10 @@ export default function FlightCamera({
       endPosition.current
     );
 
-    camera.lookAt(
-      EARTH_CENTER
+    stabilizeCameraOrientation(
+      camera,
+      cameraViewDirection.current,
+      cameraStableUp.current
     );
 
     active.current = false;

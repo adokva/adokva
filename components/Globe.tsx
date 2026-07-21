@@ -358,6 +358,8 @@ export default function Globe({
       THREE.Quaternion | null
     >(null);
 
+const ROTATE_GLOBE = true;
+
   const lastSunUpdate =
     useRef(0);
 
@@ -475,6 +477,12 @@ export default function Globe({
 
       return;
     }
+    if (!ROTATE_GLOBE) {
+  destinationQuaternion.current =
+    null;
+
+  return;
+}
 
     const cityDirection =
       latLonToVector3(
@@ -497,13 +505,9 @@ export default function Globe({
         .normalize();
 
     const displayDirection =
-      cameraDirection
-        .clone()
-        .addScaledVector(
-          cameraRight,
-          -0.24
-        )
-        .normalize();
+  cameraDirection
+    .clone()
+    .normalize();
 
     destinationQuaternion.current =
       new THREE.Quaternion()

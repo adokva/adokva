@@ -309,8 +309,8 @@ export default function WorldCameraController({
       worldPosition
     );
 
-    const approachDirection =
-      EARTH_POSITION
+        const approachDirection =
+      startPosition.current
         .clone()
         .sub(
           worldPosition

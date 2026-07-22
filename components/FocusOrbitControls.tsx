@@ -452,28 +452,7 @@ export default function FocusOrbitControls({
     );
   });
 
-  /*
-    Выполняется после OrbitControls.
-
-    Камера всегда смотрит на центр
-    Земли, а её верх выравнивается
-    относительно мирового севера.
-  */
-
-  useFrame(() => {
-    if (
-      !enabled ||
-      !controlsReady
-    ) {
-      return;
-    }
-
-    stabilizeCameraOrientation(
-      camera,
-      cameraViewDirection.current,
-      cameraStableUp.current
-    );
-  }, 1);
+  
 
   if (
     !enabled ||

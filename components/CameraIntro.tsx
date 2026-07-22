@@ -96,11 +96,7 @@ export default function CameraIntro({
       new THREE.Vector3()
     );
 
-    useEffect(() => {
-    if (!active) {
-      return;
-    }
-
+  useEffect(() => {
     startTime.current = null;
     finished.current = false;
 

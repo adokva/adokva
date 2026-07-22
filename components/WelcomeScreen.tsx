@@ -89,7 +89,7 @@ export default function WelcomeScreen({
           background:
             "radial-gradient(circle, rgba(38,142,255,.2), rgba(12,70,145,.06) 43%, transparent 72%)",
 
-          filter: "blur(22px)",
+          filter: "none",
 
           animation:
             closing

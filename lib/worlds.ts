@@ -1,12 +1,7 @@
 import type {
   WorldId,
+  WorldType,
 } from "@/types/world";
-
-export type WorldType =
-  | "planet"
-  | "moon"
-  | "star";
-
 export type WorldInfo = {
   id: WorldId;
 

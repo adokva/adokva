@@ -8,16 +8,42 @@ import {
   WORLDS,
 } from "@/lib/worlds";
 
-const menuItems = [
-  "🔍 Найти земляков",
-  "➕ Добавить себя",
-  "📊 Статистика",
-  `${WORLDS.moon.emoji} ${WORLDS.moon.name}`,
-  `${WORLDS.sun.emoji} ${WORLDS.sun.name}`,
-  "🌎 Где были",
-  "⚙ Настройки",
-];
+import type {
+  WorldId,
+} from "@/types/world";
 
+const menuItems = [
+  {
+    id: "search",
+    title: "🔍 Найти земляков",
+  },
+  {
+    id: "add",
+    title: "➕ Добавить себя",
+  },
+  {
+    id: "stats",
+    title: "📊 Статистика",
+  },
+  {
+    id: "moon",
+    worldId: "moon" as WorldId,
+    title: `${WORLDS.moon.emoji} ${WORLDS.moon.name}`,
+  },
+  {
+    id: "sun",
+    worldId: "sun" as WorldId,
+    title: `${WORLDS.sun.emoji} ${WORLDS.sun.name}`,
+  },
+  {
+    id: "visited",
+    title: "🌎 Где были",
+  },
+  {
+    id: "settings",
+    title: "⚙ Настройки",
+  },
+];
 export default function Sidebar() {
   const [
     open,
@@ -83,8 +109,8 @@ export default function Sidebar() {
               index
             ) => (
               <MenuItem
-                key={title}
-                title={title}
+                key={title.id}
+                title={title.title}
                 index={index}
                 open={open}
               />

@@ -1,7 +1,13 @@
 export type WorldId =
   | "earth"
   | "sun"
-  | "moon";
+  | "moon"
+  | "mars";
+
+export type WorldType =
+  | "planet"
+  | "moon"
+  | "star";
 
 export type SelectedWorld =
   WorldId | null;

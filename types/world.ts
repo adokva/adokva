@@ -2,6 +2,7 @@ export type WorldId =
   | "earth"
   | "sun"
   | "moon"
+  | "mercury"
   | "mars";
 
 export type WorldType =

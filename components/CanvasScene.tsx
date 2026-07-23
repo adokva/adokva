@@ -12,6 +12,7 @@ import {
   useThree,
 } from "@react-three/fiber";
 
+
 import {
   Bloom,
   EffectComposer,
@@ -31,12 +32,14 @@ import Globe from "./Globe";
 import SatelliteManager from "./SatelliteManager";
 
 
+
 import Moon, {
   getMoonPosition,
 } from "./Moon";
 
 import Sun from "./Sun";
 import Mars from "./Mars";
+import Mercury from "./Mercury";
 import WorldCameraController from "./WorldCameraController";
 
 import type {
@@ -453,6 +456,8 @@ export default function CanvasScene({
   const exploringWorld =
   selectedWorld === "sun" ||
   selectedWorld === "moon" ||
+  selectedWorld ===
+    "mercury" ||
   selectedWorld === "mars";
 
   useEffect(() => {
@@ -538,27 +543,29 @@ export default function CanvasScene({
             : selectedLocation
         }
       />
+     
 <SatelliteManager />
       <Sun
-        onSelect={() => {
-          onSelectWorld(
-            "sun"
-          );
-        }}
-      />
+  onSelect={() => {
+    onSelectWorld("sun");
+  }}
+/>
 
-      <Moon
-        onSelect={() => {
-          onSelectWorld(
-            "moon"
-          );
-        }}
-      />
+<Moon
+  onSelect={() => {
+    onSelectWorld("moon");
+  }}
+/>
+
+<Mercury
+  onSelect={() => {
+    onSelectWorld("mercury");
+  }}
+/>
+
 <Mars
   onSelect={() => {
-    onSelectWorld(
-      "mars"
-    );
+    onSelectWorld("mars");
   }}
 />
       <CameraIntro

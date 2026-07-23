@@ -75,6 +75,35 @@ const WORLD_INFORMATION: Partial<
     ],
   },
 
+  mercury: {
+    symbol: "☿",
+    name: "MERCURY",
+    subtitle:
+      "The closest planet to the Sun",
+    facts: [
+      {
+        label: "Distance from Sun",
+        value: "≈ 57.9 million km",
+      },
+      {
+        label: "Radius",
+        value: "2 440 km",
+      },
+      {
+        label: "Gravity",
+        value: "3.70 m/s²",
+      },
+      {
+        label: "Day length",
+        value: "≈ 176 Earth days",
+      },
+      {
+        label: "Orbital period",
+        value: "88 Earth days",
+      },
+    ],
+  },
+
   mars: {
     symbol: "●",
     name: "MARS",

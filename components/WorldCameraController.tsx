@@ -19,6 +19,7 @@ import type {
 
 import {
   MARS_POSITION,
+  MERCURY_CURRENT_POSITION,
   SUN_POSITION,
 } from "../lib/space";
 
@@ -43,14 +44,17 @@ const EARTH_CAMERA_POSITION =
 const MOON_VISUAL_RADIUS = 0.72;
 const SUN_VISUAL_RADIUS = 1.2;
 const MARS_VISUAL_RADIUS = 0.8;
+const MERCURY_VISUAL_RADIUS = 0.58;
 
 const MOON_FRAME_PADDING = 1.55;
 const SUN_FRAME_PADDING = 1.5;
 const MARS_FRAME_PADDING = 1.6;
+const MERCURY_FRAME_PADDING = 1.65;
 
 const EARTH_FLIGHT_DURATION = 2.15;
 const WORLD_FLIGHT_DURATION = 2.75;
 const MARS_FLIGHT_DURATION = 3.4;
+const MERCURY_FLIGHT_DURATION = 3.2;
 
 const clamp01 = (
   value: number
@@ -59,31 +63,6 @@ const clamp01 = (
     Math.max(value, 0),
     1
   );
-
-const easeInOutCubic = (
-  value: number
-) => {
-  const progress =
-    clamp01(value);
-
-  if (progress < 0.5) {
-    return (
-      4 *
-      progress *
-      progress *
-      progress
-    );
-  }
-
-  return (
-    1 -
-    Math.pow(
-      -2 * progress + 2,
-      3
-    ) /
-      2
-  );
-};
 
 function calculateCameraDistance(
   camera: THREE.Camera,
@@ -193,6 +172,16 @@ export default function WorldCameraController({
       new THREE.Vector3()
     );
 
+  const mercuryCameraOffset =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const previousMercuryPosition =
+    useRef(
+      new THREE.Vector3()
+    );
+
   const sunPosition =
     useMemo(
       () =>
@@ -290,6 +279,23 @@ export default function WorldCameraController({
 
       framePadding =
         MARS_FRAME_PADDING;
+    } else if (
+      selectedWorld ===
+      "mercury"
+    ) {
+      worldPosition.copy(
+        MERCURY_CURRENT_POSITION
+      );
+
+      previousMercuryPosition.current.copy(
+        MERCURY_CURRENT_POSITION
+      );
+
+      worldRadius =
+        MERCURY_VISUAL_RADIUS;
+
+      framePadding =
+        MERCURY_FRAME_PADDING;
     } else {
       endLookTarget.current.copy(
         EARTH_POSITION
@@ -309,7 +315,7 @@ export default function WorldCameraController({
       worldPosition
     );
 
-        const approachDirection =
+    const approachDirection =
       startPosition.current
         .clone()
         .sub(
@@ -345,6 +351,19 @@ export default function WorldCameraController({
         cameraDistance
       );
 
+    if (
+      selectedWorld ===
+      "mercury"
+    ) {
+      mercuryCameraOffset.current
+        .copy(
+          endPosition.current
+        )
+        .sub(
+          worldPosition
+        );
+    }
+
     elapsed.current = 0;
     active.current = true;
   }, [
@@ -359,10 +378,63 @@ export default function WorldCameraController({
   ]);
 
   useFrame((_, delta) => {
+    if (!enabled) {
+      return;
+    }
+
+    const currentWorld =
+      selectedWorldRef.current;
+
     if (
-      !enabled ||
-      !active.current
+      currentWorld ===
+      "mercury"
     ) {
+      endLookTarget.current.copy(
+        MERCURY_CURRENT_POSITION
+      );
+
+      endPosition.current
+        .copy(
+          MERCURY_CURRENT_POSITION
+        )
+        .add(
+          mercuryCameraOffset.current
+        );
+    }
+
+    if (!active.current) {
+      if (
+        currentWorld !==
+        "mercury"
+      ) {
+        return;
+      }
+
+      const mercuryMovement =
+        workingPosition.current
+          .copy(
+            MERCURY_CURRENT_POSITION
+          )
+          .sub(
+            previousMercuryPosition.current
+          );
+
+      camera.position.add(
+        mercuryMovement
+      );
+
+      currentLookTarget.current.copy(
+        MERCURY_CURRENT_POSITION
+      );
+
+      camera.lookAt(
+        currentLookTarget.current
+      );
+
+      previousMercuryPosition.current.copy(
+        MERCURY_CURRENT_POSITION
+      );
+
       return;
     }
 
@@ -371,9 +443,6 @@ export default function WorldCameraController({
         delta,
         0.05
       );
-
-    const currentWorld =
-      selectedWorldRef.current;
 
     let duration =
       WORLD_FLIGHT_DURATION;
@@ -389,6 +458,12 @@ export default function WorldCameraController({
     ) {
       duration =
         MARS_FLIGHT_DURATION;
+    } else if (
+      currentWorld ===
+      "mercury"
+    ) {
+      duration =
+        MERCURY_FLIGHT_DURATION;
     }
 
     const progress =
@@ -397,16 +472,11 @@ export default function WorldCameraController({
           duration
       );
 
-    const eased =
-      easeInOutCubic(
-        progress
-      );
-
     workingPosition.current
       .lerpVectors(
         startPosition.current,
         endPosition.current,
-        eased
+        progress
       );
 
     camera.position.copy(
@@ -417,12 +487,21 @@ export default function WorldCameraController({
       .lerpVectors(
         startLookTarget.current,
         endLookTarget.current,
-        eased
+        progress
       );
 
     camera.lookAt(
       currentLookTarget.current
     );
+
+    if (
+      currentWorld ===
+      "mercury"
+    ) {
+      previousMercuryPosition.current.copy(
+        MERCURY_CURRENT_POSITION
+      );
+    }
 
     if (progress >= 1) {
       camera.position.copy(

@@ -2,6 +2,7 @@ import type {
   WorldId,
   WorldType,
 } from "@/types/world";
+
 export type WorldInfo = {
   id: WorldId;
 
@@ -52,6 +53,18 @@ export const WORLDS: Record<
     type: "star",
 
     parent: null,
+  },
+
+  mercury: {
+    id: "mercury",
+
+    name: "Mercury",
+
+    emoji: "☿️",
+
+    type: "planet",
+
+    parent: "sun",
   },
 
   mars: {

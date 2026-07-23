@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useEffect,
   useState,
 } from "react";
 
@@ -15,6 +16,7 @@ import type {
 } from "@/components/SearchPanel";
 
 import WelcomeScreen from "@/components/WelcomeScreen";
+import WorldInfoPanel from "@/components/WorldInfoPanel";
 
 import type {
   SelectedWorld,
@@ -60,6 +62,37 @@ export default function Home() {
   const exploringWorld =
     selectedWorld !== null &&
     selectedWorld !== "earth";
+
+    const [
+  worldPanelVisible,
+  setWorldPanelVisible,
+] = useState(false);
+
+useEffect(() => {
+  setWorldPanelVisible(false);
+
+  if (
+    !introComplete ||
+    !exploringWorld
+  ) {
+    return;
+  }
+
+  const timer = window.setTimeout(
+    () => {
+      setWorldPanelVisible(true);
+    },
+    1800
+  );
+
+  return () => {
+    window.clearTimeout(timer);
+  };
+}, [
+  exploringWorld,
+  introComplete,
+  selectedWorld,
+]);
 
   const selectedPerson =
     selectedResult?.type ===
@@ -259,7 +292,16 @@ export default function Home() {
         />
       )}
 
-      <style>
+      {introComplete &&
+  exploringWorld &&
+  worldPanelVisible && (
+  <WorldInfoPanel
+    world={selectedWorld}
+    onClose={() => {
+      setSelectedWorld("earth");
+    }}
+  />
+)}<style>
         {`
           @keyframes adokvaPanelOpen {
             from {

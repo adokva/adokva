@@ -1,10 +1,10 @@
 import type {
   WorldObject,
-} from "../types/worldObject";
+} from "../../types/worldObject";
 
 import {
   locations,
-} from "./locations";
+} from "../locations";
 
 export const worldObjects: WorldObject[] =
   locations.map((location) => {

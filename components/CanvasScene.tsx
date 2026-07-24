@@ -31,6 +31,7 @@ import Mercury from "./Mercury";
 import Moon, {
   MOON_POSITION,
 } from "./Moon";
+import PlanetOrbitControls from "./PlanetOrbitControls";
 import SatelliteManager from "./SatelliteManager";
 import SolarOrbitControls from "./SolarOrbitControls";
 import SpaceBackground from "./SpaceBackground";
@@ -264,7 +265,19 @@ export default function CanvasScene({
       <SolarOrbitControls
         enabled={
           introComplete &&
-          solarSystemView
+          solarSystemView &&
+          !exploringWorld
+        }
+      />
+
+      <PlanetOrbitControls
+        enabled={
+          introComplete &&
+          exploringWorld &&
+          !solarSystemView
+        }
+        selectedWorld={
+          selectedWorld
         }
       />
 

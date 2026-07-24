@@ -32,6 +32,7 @@ import Moon, {
   MOON_POSITION,
 } from "./Moon";
 import SatelliteManager from "./SatelliteManager";
+import SolarOrbitControls from "./SolarOrbitControls";
 import SpaceBackground from "./SpaceBackground";
 import Sun from "./Sun";
 import WorldCameraController from "./WorldCameraController";
@@ -256,6 +257,13 @@ export default function CanvasScene({
           !cityFlightActive
         }
         solarSystemView={
+          solarSystemView
+        }
+      />
+
+      <SolarOrbitControls
+        enabled={
+          introComplete &&
           solarSystemView
         }
       />

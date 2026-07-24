@@ -6,17 +6,20 @@ import {
 } from "react";
 
 import CanvasScene from "@/components/CanvasScene";
+import CompatriotSetupPanel from "@/components/CompatriotSetupPanel";
 import MenuButton from "@/components/MenuButton";
 import PersonCard from "@/components/PersonCard";
-
 import SearchPanel from "@/components/SearchPanel";
+import WelcomeScreen from "@/components/WelcomeScreen";
+import WorldInfoPanel from "@/components/WorldInfoPanel";
+
+import type {
+  CompatriotSelection,
+} from "@/components/CompatriotSetupPanel";
 
 import type {
   SelectedSearchResult,
 } from "@/components/SearchPanel";
-
-import WelcomeScreen from "@/components/WelcomeScreen";
-import WorldInfoPanel from "@/components/WorldInfoPanel";
 
 import type {
   SelectedWorld,
@@ -44,12 +47,25 @@ export default function Home() {
   ] = useState(false);
 
   const [
+    compatriotOpen,
+    setCompatriotOpen,
+  ] = useState(false);
+
+  const [
+    compatriotSelection,
+    setCompatriotSelection,
+  ] =
+    useState<CompatriotSelection | null>(
+      null
+    );
+
+  const [
     selectedResult,
     setSelectedResult,
   ] =
-    useState<
-      SelectedSearchResult | null
-    >(null);
+    useState<SelectedSearchResult | null>(
+      null
+    );
 
   const [
     selectedWorld,
@@ -59,40 +75,45 @@ export default function Home() {
       "earth"
     );
 
+  const [
+    worldPanelVisible,
+    setWorldPanelVisible,
+  ] = useState(false);
+
   const exploringWorld =
     selectedWorld !== null &&
     selectedWorld !== "earth";
 
-    const [
-  worldPanelVisible,
-  setWorldPanelVisible,
-] = useState(false);
+  useEffect(() => {
+    setWorldPanelVisible(false);
 
-useEffect(() => {
-  setWorldPanelVisible(false);
+    if (
+      !introComplete ||
+      !exploringWorld
+    ) {
+      return;
+    }
 
-  if (
-    !introComplete ||
-    !exploringWorld
-  ) {
-    return;
-  }
+    const timer =
+      window.setTimeout(
+        () => {
+          setWorldPanelVisible(
+            true
+          );
+        },
+        1800
+      );
 
-  const timer = window.setTimeout(
-    () => {
-      setWorldPanelVisible(true);
-    },
-    1800
-  );
-
-  return () => {
-    window.clearTimeout(timer);
-  };
-}, [
-  exploringWorld,
-  introComplete,
-  selectedWorld,
-]);
+    return () => {
+      window.clearTimeout(
+        timer
+      );
+    };
+  }, [
+    exploringWorld,
+    introComplete,
+    selectedWorld,
+  ]);
 
   const selectedPerson =
     selectedResult?.type ===
@@ -118,6 +139,7 @@ useEffect(() => {
   ) => {
     setSelectedResult(null);
     setSearchOpen(false);
+    setCompatriotOpen(false);
 
     setSelectedWorld(
       (currentWorld) => {
@@ -132,6 +154,22 @@ useEffect(() => {
       }
     );
   };
+
+  const closeFloatingPanels =
+    () => {
+      setSearchOpen(false);
+      setCompatriotOpen(false);
+    };
+
+  const handleCompatriotComplete =
+    (
+      selection:
+        CompatriotSelection
+    ) => {
+      setCompatriotSelection(
+        selection
+      );
+    };
 
   return (
     <main
@@ -178,6 +216,14 @@ useEffect(() => {
         !exploringWorld && (
           <MenuButton
             onClick={() => {
+              setCompatriotOpen(
+                false
+              );
+
+              setCompatriotSelection(
+                null
+              );
+
               setSearchOpen(
                 (current) =>
                   !current
@@ -187,14 +233,125 @@ useEffect(() => {
         )}
 
       {introComplete &&
-        searchOpen &&
         !exploringWorld && (
-          <div
+          <button
+            type="button"
             onClick={() => {
               setSearchOpen(
                 false
               );
+
+              setCompatriotSelection(
+                null
+              );
+
+              setCompatriotOpen(
+                (current) =>
+                  !current
+              );
             }}
+            style={{
+              position:
+                "fixed",
+
+              top: 22,
+              right: 22,
+
+              zIndex: 850,
+
+              display:
+                "flex",
+
+              alignItems:
+                "center",
+
+              gap: 10,
+
+              padding:
+                "13px 18px",
+
+              borderRadius:
+                999,
+
+              border:
+                "1px solid rgba(126,190,255,.24)",
+
+              background:
+                "linear-gradient(135deg, rgba(27,111,205,.72), rgba(101,64,190,.72))",
+
+              backdropFilter:
+                "blur(20px)",
+
+              WebkitBackdropFilter:
+                "blur(20px)",
+
+              boxShadow:
+                "0 14px 40px rgba(25,95,220,.25)",
+
+              color:
+                "white",
+
+              cursor:
+                "pointer",
+
+              fontSize: 13,
+
+              fontWeight:
+                800,
+
+              letterSpacing:
+                0.7,
+
+              transition:
+                "transform .2s ease, box-shadow .2s ease",
+            }}
+            onMouseEnter={(
+              event
+            ) => {
+              event.currentTarget
+                .style
+                .transform =
+                "translateY(-2px) scale(1.02)";
+
+              event.currentTarget
+                .style
+                .boxShadow =
+                "0 18px 50px rgba(45,110,255,.38)";
+            }}
+            onMouseLeave={(
+              event
+            ) => {
+              event.currentTarget
+                .style
+                .transform =
+                "translateY(0) scale(1)";
+
+              event.currentTarget
+                .style
+                .boxShadow =
+                "0 14px 40px rgba(25,95,220,.25)";
+            }}
+          >
+            <span
+              style={{
+                fontSize: 18,
+              }}
+            >
+              🌍
+            </span>
+
+            ЗЕМЛЯКИ
+          </button>
+        )}
+
+      {introComplete &&
+        (searchOpen ||
+          compatriotOpen) &&
+        !exploringWorld && (
+          <div
+            onClick={
+              closeFloatingPanels
+            }
             style={{
               position:
                 "fixed",
@@ -204,10 +361,13 @@ useEffect(() => {
               zIndex: 900,
 
               background:
-                "rgba(0,0,0,.32)",
+                "rgba(0,0,0,.46)",
 
               backdropFilter:
-                "blur(2px)",
+                "blur(5px)",
+
+              WebkitBackdropFilter:
+                "blur(5px)",
             }}
           />
         )}
@@ -256,6 +416,288 @@ useEffect(() => {
           </div>
         )}
 
+      {introComplete &&
+        compatriotOpen &&
+        !exploringWorld && (
+          <div
+            style={{
+              position:
+                "fixed",
+
+              inset: 0,
+
+              zIndex: 950,
+
+              display:
+                "grid",
+
+              placeItems:
+                "center",
+
+              padding: 16,
+
+              pointerEvents:
+                "none",
+
+              animation:
+                "adokvaCompatriotOpen .42s cubic-bezier(.22,1,.36,1)",
+            }}
+          >
+            <div
+              style={{
+                pointerEvents:
+                  "auto",
+
+                position:
+                  "relative",
+              }}
+            >
+              <button
+                type="button"
+                aria-label="Закрыть"
+                onClick={
+                  closeFloatingPanels
+                }
+                style={{
+                  position:
+                    "absolute",
+
+                  top: 14,
+                  right: 14,
+
+                  zIndex: 10,
+
+                  width: 38,
+                  height: 38,
+
+                  display:
+                    "grid",
+
+                  placeItems:
+                    "center",
+
+                  borderRadius:
+                    "50%",
+
+                  border:
+                    "1px solid rgba(255,255,255,.1)",
+
+                  background:
+                    "rgba(0,0,0,.25)",
+
+                  color:
+                    "rgba(255,255,255,.8)",
+
+                  cursor:
+                    "pointer",
+
+                  fontSize: 18,
+                }}
+              >
+                ×
+              </button>
+
+              {!compatriotSelection ? (
+                <CompatriotSetupPanel
+                  onComplete={
+                    handleCompatriotComplete
+                  }
+                />
+              ) : (
+                <div
+                  style={{
+                    width: 460,
+
+                    maxWidth:
+                      "calc(100vw - 32px)",
+
+                    boxSizing:
+                      "border-box",
+
+                    padding:
+                      "30px 26px",
+
+                    borderRadius:
+                      30,
+
+                    background:
+                      "linear-gradient(180deg, rgba(20,28,48,.88), rgba(7,12,25,.96))",
+
+                    border:
+                      "1px solid rgba(255,255,255,.09)",
+
+                    backdropFilter:
+                      "blur(32px)",
+
+                    WebkitBackdropFilter:
+                      "blur(32px)",
+
+                    boxShadow:
+                      "0 30px 100px rgba(0,0,0,.55), 0 0 90px rgba(55,135,255,.15)",
+
+                    color:
+                      "white",
+                  }}
+                >
+                  <div
+                    style={{
+                      fontSize: 42,
+
+                      textAlign:
+                        "center",
+                    }}
+                  >
+                    🌍
+                  </div>
+
+                  <h2
+                    style={{
+                      margin:
+                        "14px 0 0",
+
+                      textAlign:
+                        "center",
+
+                      fontSize: 25,
+                    }}
+                  >
+                    Выбор принят
+                  </h2>
+
+                  <p
+                    style={{
+                      margin:
+                        "10px 0 0",
+
+                      textAlign:
+                        "center",
+
+                      color:
+                        "rgba(225,235,250,.58)",
+
+                      fontSize: 14,
+
+                      lineHeight:
+                        1.55,
+                    }}
+                  >
+                    Пока данные
+                    сохраняются
+                    только в текущем
+                    интерфейсе. Сервер
+                    и анонимная
+                    статистика будут
+                    подключены на
+                    следующем этапе.
+                  </p>
+
+                  <div
+                    style={{
+                      marginTop: 22,
+
+                      padding:
+                        "17px 18px",
+
+                      borderRadius:
+                        19,
+
+                      background:
+                        "rgba(255,255,255,.05)",
+
+                      border:
+                        "1px solid rgba(255,255,255,.07)",
+
+                      fontSize: 14,
+
+                      lineHeight:
+                        1.75,
+                    }}
+                  >
+                    <div>
+                      <span
+                        style={{
+                          color:
+                            "rgba(225,235,250,.5)",
+                        }}
+                      >
+                        Родился:
+                      </span>{" "}
+                      {
+                        compatriotSelection.birthPlace
+                      }
+                      ,{" "}
+                      {
+                        compatriotSelection.birthWorldName
+                      }
+                    </div>
+
+                    <div>
+                      <span
+                        style={{
+                          color:
+                            "rgba(225,235,250,.5)",
+                        }}
+                      >
+                        Живёт:
+                      </span>{" "}
+                      {
+                        compatriotSelection.residencePlace
+                      }
+                      {compatriotSelection.residenceCountry
+                        ? `, ${compatriotSelection.residenceCountry}`
+                        : ""}
+                      ,{" "}
+                      {
+                        compatriotSelection.residenceWorldName
+                      }
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setCompatriotSelection(
+                        null
+                      );
+                    }}
+                    style={{
+                      width:
+                        "100%",
+
+                      marginTop: 20,
+
+                      padding:
+                        "15px 18px",
+
+                      border:
+                        "none",
+
+                      borderRadius:
+                        17,
+
+                      background:
+                        "linear-gradient(135deg, #3d9cff, #8068ff)",
+
+                      color:
+                        "white",
+
+                      cursor:
+                        "pointer",
+
+                      fontSize: 15,
+
+                      fontWeight:
+                        800,
+                    }}
+                  >
+                    Изменить выбор
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
       {selectedPerson &&
         !exploringWorld && (
           <PersonCard
@@ -293,15 +735,21 @@ useEffect(() => {
       )}
 
       {introComplete &&
-  exploringWorld &&
-  worldPanelVisible && (
-  <WorldInfoPanel
-    world={selectedWorld}
-    onClose={() => {
-      setSelectedWorld("earth");
-    }}
-  />
-)}<style>
+        exploringWorld &&
+        worldPanelVisible && (
+          <WorldInfoPanel
+            world={
+              selectedWorld
+            }
+            onClose={() => {
+              setSelectedWorld(
+                "earth"
+              );
+            }}
+          />
+        )}
+
+      <style>
         {`
           @keyframes adokvaPanelOpen {
             from {
@@ -317,6 +765,24 @@ useEffect(() => {
 
               transform:
                 translateX(0)
+                scale(1);
+            }
+          }
+
+          @keyframes adokvaCompatriotOpen {
+            from {
+              opacity: 0;
+
+              transform:
+                translateY(25px)
+                scale(.96);
+            }
+
+            to {
+              opacity: 1;
+
+              transform:
+                translateY(0)
                 scale(1);
             }
           }

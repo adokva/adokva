@@ -17,18 +17,18 @@ type Props = {
   onComplete: () => void;
 };
 
-const START_POSITION =
+const WELCOME_POSITION =
   new THREE.Vector3(
-    12,
-    6,
-    17
+    1.8,
+    0.8,
+    9.3
   );
 
-const CONTROL_POSITION =
+const INTRO_CONTROL_POSITION =
   new THREE.Vector3(
-    5.2,
-    2.7,
-    11
+    0.9,
+    0.65,
+    8.55
   );
 
 const END_POSITION =
@@ -45,18 +45,55 @@ const EARTH_TARGET =
     0
   );
 
-const INTRO_DURATION_MS =
-  1750;
+const WELCOME_LOOK_TARGET =
+  new THREE.Vector3(
+    -0.65,
+    0,
+    0
+  );
 
-function easeOutCubic(
+const INTRO_DURATION_MS =
+  1700;
+
+/*
+  Движение специально немного
+  усиливаем, чтобы сначала его
+  можно было увидеть и проверить.
+*/
+const IDLE_POSITION_X =
+  0.075;
+
+const IDLE_POSITION_Y =
+  0.045;
+
+const IDLE_TARGET_X =
+  0.06;
+
+const IDLE_TARGET_Y =
+  0.032;
+
+const IDLE_SPEED =
+  0.3;
+
+function easeInOutCubic(
   value: number
 ) {
+  if (value < 0.5) {
+    return (
+      4 *
+      value *
+      value *
+      value
+    );
+  }
+
   return (
     1 -
     Math.pow(
-      1 - value,
+      -2 * value + 2,
       3
-    )
+    ) /
+      2
   );
 }
 
@@ -64,9 +101,8 @@ export default function CameraIntro({
   active,
   onComplete,
 }: Props) {
-  const {
-    camera,
-  } = useThree();
+  const { camera } =
+    useThree();
 
   const startTime =
     useRef<number | null>(
@@ -75,6 +111,11 @@ export default function CameraIntro({
 
   const finished =
     useRef(false);
+
+  const introStartPosition =
+    useRef(
+      new THREE.Vector3()
+    );
 
   const firstPart =
     useRef(
@@ -96,27 +137,89 @@ export default function CameraIntro({
       new THREE.Vector3()
     );
 
+  const idlePosition =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const idleTarget =
+    useRef(
+      new THREE.Vector3()
+    );
+
   useEffect(() => {
     startTime.current = null;
     finished.current = false;
 
-    camera.position.copy(
-      START_POSITION
-    );
+    if (!active) {
+      camera.position.copy(
+        WELCOME_POSITION
+      );
 
-    camera.lookAt(
-      EARTH_TARGET
+      camera.lookAt(
+        WELCOME_LOOK_TARGET
+      );
+
+      return;
+    }
+
+    introStartPosition.current.copy(
+      camera.position
     );
   }, [
     active,
     camera,
   ]);
 
-  useFrame(() => {
-    if (
-      !active ||
-      finished.current
-    ) {
+  useFrame((state) => {
+    /*
+      Пока кнопка не нажата,
+      камера медленно живёт.
+    */
+    if (!active) {
+      const time =
+        state.clock.elapsedTime *
+        IDLE_SPEED;
+
+      idlePosition.current.copy(
+        WELCOME_POSITION
+      );
+
+      idlePosition.current.x +=
+        Math.sin(time) *
+        IDLE_POSITION_X;
+
+      idlePosition.current.y +=
+        Math.sin(
+          time * 0.71 + 1.1
+        ) * IDLE_POSITION_Y;
+
+      idleTarget.current.copy(
+        WELCOME_LOOK_TARGET
+      );
+
+      idleTarget.current.x +=
+        Math.sin(
+          time * 0.63 + 0.4
+        ) * IDLE_TARGET_X;
+
+      idleTarget.current.y +=
+        Math.sin(
+          time * 0.49 + 1.8
+        ) * IDLE_TARGET_Y;
+
+      camera.position.copy(
+        idlePosition.current
+      );
+
+      camera.lookAt(
+        idleTarget.current
+      );
+
+      return;
+    }
+
+    if (finished.current) {
       return;
     }
 
@@ -129,6 +232,15 @@ export default function CameraIntro({
     ) {
       startTime.current =
         currentTime;
+
+      /*
+        Полёт начинается точно
+        из текущего живого кадра.
+        Никакого скачка камеры.
+      */
+      introStartPosition.current.copy(
+        camera.position
+      );
     }
 
     const elapsedTime =
@@ -143,50 +255,42 @@ export default function CameraIntro({
       );
 
     const progress =
-      easeOutCubic(
+      easeInOutCubic(
         rawProgress
       );
 
-    firstPart.current
-      .lerpVectors(
-        START_POSITION,
-        CONTROL_POSITION,
-        progress
-      );
+    firstPart.current.lerpVectors(
+      introStartPosition.current,
+      INTRO_CONTROL_POSITION,
+      progress
+    );
 
-    secondPart.current
-      .lerpVectors(
-        CONTROL_POSITION,
-        END_POSITION,
-        progress
-      );
+    secondPart.current.lerpVectors(
+      INTRO_CONTROL_POSITION,
+      END_POSITION,
+      progress
+    );
 
-    curvedPosition.current
-      .lerpVectors(
-        firstPart.current,
-        secondPart.current,
-        progress
-      );
+    curvedPosition.current.lerpVectors(
+      firstPart.current,
+      secondPart.current,
+      progress
+    );
 
     curvedPosition.current.y +=
       Math.sin(
         rawProgress *
           Math.PI
-      ) *
-      0.2;
+      ) * 0.12;
 
     camera.position.copy(
       curvedPosition.current
     );
 
-    lookTarget.current.set(
-      0,
-      Math.sin(
-        rawProgress *
-          Math.PI
-      ) *
-        0.05,
-      0
+    lookTarget.current.lerpVectors(
+      idleTarget.current,
+      EARTH_TARGET,
+      progress
     );
 
     camera.lookAt(

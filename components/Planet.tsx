@@ -19,6 +19,8 @@ import type {
   PlanetConfig,
 } from "../data/planets";
 
+import PlanetGlow from "./PlanetGlow";
+import PlanetHitArea from "./PlanetHitArea";
 import PlanetOrbit from "./PlanetOrbit";
 
 type Props = {
@@ -248,63 +250,19 @@ export default function Planet({
         </mesh>
 
         {config.glow && (
-          <mesh
-            scale={
-              config.glow.scale
-            }
-            raycast={() => null}
-          >
-            <sphereGeometry
-              args={[
-                config.radius,
-                config.glow
-                  .geometrySegments,
-                config.glow
-                  .geometrySegments,
-              ]}
-            />
-
-            <meshBasicMaterial
-              color={
-                config.glow.color
-              }
-              transparent
-              opacity={
-                config.glow.opacity
-              }
-              depthWrite={false}
-              side={THREE.BackSide}
-            />
-          </mesh>
+          <PlanetGlow
+            radius={config.radius}
+            glow={config.glow}
+          />
         )}
 
         {config.interactionRadius && (
-          <mesh
-            onPointerDown={
-              handleSelect
+          <PlanetHitArea
+            radius={
+              config.interactionRadius
             }
-            onPointerOver={
-              handlePointerOver
-            }
-            onPointerOut={
-              handlePointerOut
-            }
-          >
-            <sphereGeometry
-              args={[
-                config.interactionRadius,
-                32,
-                32,
-              ]}
-            />
-
-            <meshBasicMaterial
-              transparent
-              opacity={0.001}
-              depthWrite={false}
-              colorWrite={false}
-            />
-          </mesh>
+            onSelect={onSelect}
+          />
         )}
       </group>
     </>

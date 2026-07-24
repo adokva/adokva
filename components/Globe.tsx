@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
 } from "react";
@@ -396,7 +397,7 @@ const ROTATE_GLOBE = true;
       "/textures/night.jpg"
     );
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     dayTexture.colorSpace =
       THREE.SRGBColorSpace;
 
@@ -826,32 +827,7 @@ const ROTATE_GLOBE = true;
         />
       </mesh>
 
-      {/*
-        Тонкий океанический слой.
-      */}
-
-      <mesh>
-        <sphereGeometry
-          args={[
-            2.005,
-            160,
-            160,
-          ]}
-        />
-
-        <meshPhysicalMaterial
-          color="#071c2e"
-          transparent
-          opacity={0.012}
-          roughness={0.62}
-          metalness={0}
-          clearcoat={0.08}
-          clearcoatRoughness={
-            0.72
-          }
-          depthWrite={false}
-        />
-      </mesh>
+      
 
       <Atmosphere />
 

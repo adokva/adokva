@@ -894,6 +894,7 @@ export default function Sun({
         SUN_POSITION[2],
       ]}
     >
+     
       <pointLight
         color="#fff2cc"
         intensity={34}

@@ -1,6 +1,7 @@
 import * as THREE from "three";
 
 import {
+  MARS_POSITION,
   MERCURY_CURRENT_POSITION,
   MERCURY_INITIAL_ANGLE,
   MERCURY_ORBIT_HEIGHT,
@@ -11,7 +12,32 @@ import {
 } from "../lib/space";
 
 export type PlanetId =
-  | "mercury";
+  | "mercury"
+  | "mars";
+
+export type PlanetOrbitConfig = {
+  center: readonly [
+    number,
+    number,
+    number,
+  ];
+
+  radius: number;
+
+  height: number;
+
+  speed: number;
+
+  initialAngle: number;
+
+  segments: number;
+
+  color: string;
+
+  lineWidth: number;
+
+  opacity: number;
+};
 
 export type PlanetConfig = {
   id: PlanetId;
@@ -26,6 +52,8 @@ export type PlanetConfig = {
 
   rotationSpeed: number;
 
+  initialRotationY?: number;
+
   initialPosition: readonly [
     number,
     number,
@@ -35,28 +63,14 @@ export type PlanetConfig = {
   currentPosition:
     THREE.Vector3;
 
-  orbit: {
-    center: readonly [
-      number,
-      number,
-      number,
-    ];
+  orbit?: PlanetOrbitConfig;
 
-    radius: number;
+  texture?: {
+    wrapS?: THREE.Wrapping;
 
-    height: number;
+    wrapT?: THREE.Wrapping;
 
-    speed: number;
-
-    initialAngle: number;
-
-    segments: number;
-
-    color: string;
-
-    lineWidth: number;
-
-    opacity: number;
+    anisotropy?: number;
   };
 
   material: {
@@ -65,7 +79,21 @@ export type PlanetConfig = {
     roughness: number;
 
     metalness: number;
+
+    color?: string;
   };
+
+  glow?: {
+    scale: number;
+
+    geometrySegments: number;
+
+    color: string;
+
+    opacity: number;
+  };
+
+  interactionRadius?: number;
 
   camera: {
     visualRadius: number;
@@ -121,6 +149,10 @@ export const MERCURY_CONFIG:
     opacity: 0.34,
   },
 
+  texture: {
+    anisotropy: 16,
+  },
+
   material: {
     bumpScale: 0.025,
 
@@ -138,9 +170,78 @@ export const MERCURY_CONFIG:
   },
 };
 
+export const MARS_CONFIG:
+  PlanetConfig = {
+  id: "mars",
+
+  name: "Mars",
+
+  texturePath:
+    "/textures/Mars.jpg",
+
+  radius: 0.34,
+
+  geometrySegments: 192,
+
+  rotationSpeed: 0.01,
+
+  initialRotationY: Math.PI,
+
+  initialPosition:
+    MARS_POSITION,
+
+  currentPosition:
+    new THREE.Vector3(
+      MARS_POSITION[0],
+      MARS_POSITION[1],
+      MARS_POSITION[2]
+    ),
+
+  texture: {
+    wrapS:
+      THREE.RepeatWrapping,
+
+    wrapT:
+      THREE.ClampToEdgeWrapping,
+
+    anisotropy: 16,
+  },
+
+  material: {
+    bumpScale: 0.004,
+
+    roughness: 1,
+
+    metalness: 0,
+
+    color: "#ffffff",
+  },
+
+  glow: {
+    scale: 1.01,
+
+    geometrySegments: 96,
+
+    color: "#ffb18a",
+
+    opacity: 0.015,
+  },
+
+  interactionRadius: 0.65,
+
+  camera: {
+    visualRadius: 0.8,
+
+    framePadding: 1.6,
+
+    flightDuration: 3.4,
+  },
+};
+
 export const PLANETS:
   readonly PlanetConfig[] = [
   MERCURY_CONFIG,
+  MARS_CONFIG,
 ];
 
 export function getPlanetConfig(

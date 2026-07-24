@@ -49,6 +49,31 @@ const SELECTED_DISTANCE =
 const DISTANCE_ANIMATION_DURATION =
   1.3;
 
+/*
+  Очень маленькое движение.
+
+  Оно не должно выглядеть
+  как покачивание камеры.
+
+  Пользователь должен скорее
+  чувствовать его, чем замечать.
+*/
+
+const CAMERA_BREATH_X =
+  0.026;
+
+const CAMERA_BREATH_Y =
+  0.017;
+
+const CAMERA_BREATH_Z =
+  0.006;
+
+const CAMERA_BREATH_SPEED =
+  0.22;
+
+const CAMERA_BREATH_SMOOTHING =
+  2.4;
+
 function stabilizeCameraOrientation(
   camera: THREE.Camera,
   viewDirection: THREE.Vector3,
@@ -143,6 +168,9 @@ export default function FocusOrbitControls({
   const animationActive =
     useRef(false);
 
+  const userInteracting =
+    useRef(false);
+
   const elapsed =
     useRef(0);
 
@@ -173,6 +201,16 @@ export default function FocusOrbitControls({
     );
 
   const cameraStableUp =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const breathingTarget =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const desiredBreathingTarget =
     useRef(
       new THREE.Vector3()
     );
@@ -212,6 +250,21 @@ export default function FocusOrbitControls({
       returnDelayElapsed.current =
         0;
 
+      userInteracting.current =
+        false;
+
+      breathingTarget.current.set(
+        0,
+        0,
+        0
+      );
+
+      desiredBreathingTarget.current.set(
+        0,
+        0,
+        0
+      );
+
       setAnimating(false);
       setControlsReady(false);
 
@@ -232,6 +285,9 @@ export default function FocusOrbitControls({
         false;
 
       animationActive.current =
+        false;
+
+      userInteracting.current =
         false;
 
       setAnimating(false);
@@ -289,6 +345,18 @@ export default function FocusOrbitControls({
     animationActive.current =
       false;
 
+    breathingTarget.current.set(
+      0,
+      0,
+      0
+    );
+
+    desiredBreathingTarget.current.set(
+      0,
+      0,
+      0
+    );
+
     setAnimating(false);
 
     stabilizeCameraOrientation(
@@ -334,6 +402,26 @@ export default function FocusOrbitControls({
 
     previousSelected.current =
       selected;
+
+    breathingTarget.current.set(
+      0,
+      0,
+      0
+    );
+
+    desiredBreathingTarget.current.set(
+      0,
+      0,
+      0
+    );
+
+    if (controls.current) {
+      controls.current.target.copy(
+        EARTH_CENTER
+      );
+
+      controls.current.update();
+    }
 
     startPosition.current.copy(
       camera.position
@@ -452,7 +540,94 @@ export default function FocusOrbitControls({
     );
   });
 
-  
+  /*
+    Живое дыхание камеры.
+
+    Мы слегка двигаем точку,
+    на которую смотрит камера.
+
+    Расстояние до Земли при этом
+    почти не меняется, поэтому
+    изображение остаётся спокойным.
+  */
+
+  useFrame((state, delta) => {
+    if (
+      !enabled ||
+      !controlsReady ||
+      !controls.current
+    ) {
+      return;
+    }
+
+    const breathingAllowed =
+      !selected &&
+      !animating &&
+      !animationActive.current &&
+      !userInteracting.current;
+
+    if (breathingAllowed) {
+      const time =
+        state.clock.elapsedTime *
+        CAMERA_BREATH_SPEED;
+
+      desiredBreathingTarget.current.set(
+        Math.sin(time) *
+          CAMERA_BREATH_X,
+
+        Math.sin(
+          time * 0.73 + 1.2
+        ) * CAMERA_BREATH_Y,
+
+        Math.sin(
+          time * 0.41 + 2.1
+        ) * CAMERA_BREATH_Z
+      );
+    } else {
+      desiredBreathingTarget.current.set(
+        0,
+        0,
+        0
+      );
+    }
+
+    const safeDelta =
+      Math.min(delta, 0.05);
+
+    breathingTarget.current.x =
+      THREE.MathUtils.damp(
+        breathingTarget.current.x,
+        desiredBreathingTarget.current.x,
+        CAMERA_BREATH_SMOOTHING,
+        safeDelta
+      );
+
+    breathingTarget.current.y =
+      THREE.MathUtils.damp(
+        breathingTarget.current.y,
+        desiredBreathingTarget.current.y,
+        CAMERA_BREATH_SMOOTHING,
+        safeDelta
+      );
+
+    breathingTarget.current.z =
+      THREE.MathUtils.damp(
+        breathingTarget.current.z,
+        desiredBreathingTarget.current.z,
+        CAMERA_BREATH_SMOOTHING,
+        safeDelta
+      );
+
+    controls.current.target.copy(
+      EARTH_CENTER
+    );
+
+    controls.current.target.add(
+      breathingTarget.current
+    );
+
+    controls.current.update();
+  });
 
   if (
     !enabled ||
@@ -471,15 +646,29 @@ export default function FocusOrbitControls({
       enableRotate
       minDistance={4.4}
       maxDistance={12}
-      rotateSpeed={0.45}
-      zoomSpeed={0.72}
+      rotateSpeed={0.42}
+      zoomSpeed={0.68}
       enableDamping
-      dampingFactor={0.055}
+      dampingFactor={0.065}
       autoRotate={
         !selected &&
         !animating
       }
-      autoRotateSpeed={0.24}
+      autoRotateSpeed={0.2}
+      onStart={() => {
+        userInteracting.current =
+          true;
+
+        desiredBreathingTarget.current.set(
+          0,
+          0,
+          0
+        );
+      }}
+      onEnd={() => {
+        userInteracting.current =
+          false;
+      }}
       touches={{
         ONE:
           THREE.TOUCH.ROTATE,

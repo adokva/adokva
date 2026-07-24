@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  useRef,
   useState,
 } from "react";
 
@@ -10,7 +11,7 @@ type Props = {
 };
 
 const WELCOME_EXIT_DURATION =
-  620;
+  900;
 
 export default function WelcomeScreen({
   onJourneyStart,
@@ -21,11 +22,18 @@ export default function WelcomeScreen({
     setClosing,
   ] = useState(false);
 
+  const started =
+    useRef(false);
+
   const startJourney = () => {
-    if (closing) {
+    if (
+      closing ||
+      started.current
+    ) {
       return;
     }
 
+    started.current = true;
     setClosing(true);
 
     onJourneyStart();
@@ -43,10 +51,6 @@ export default function WelcomeScreen({
 
         zIndex: 100000,
 
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-
         overflow: "hidden",
 
         pointerEvents:
@@ -55,78 +59,29 @@ export default function WelcomeScreen({
             : "auto",
 
         background:
-          "radial-gradient(circle at 50% 42%, rgba(16,40,66,.98) 0%, rgba(6,17,31,.98) 34%, rgba(2,6,12,.99) 66%, #000 100%)",
+          "linear-gradient(90deg, rgba(0,0,0,.78) 0%, rgba(0,0,0,.48) 32%, rgba(0,0,0,.08) 62%, transparent 100%)",
 
         opacity:
           closing
             ? 0
             : 1,
 
-        transform:
-          closing
-            ? "scale(1.02)"
-            : "scale(1)",
-
         transition:
-          `
-            opacity ${WELCOME_EXIT_DURATION}ms ease,
-            transform ${WELCOME_EXIT_DURATION}ms cubic-bezier(.22,1,.36,1)
-          `,
+          `opacity ${WELCOME_EXIT_DURATION}ms cubic-bezier(.22,1,.36,1)`,
 
         willChange:
-          "opacity, transform",
+          "opacity",
       }}
     >
       <div
         style={{
           position: "absolute",
-
-          width: 700,
-          height: 700,
-
-          borderRadius: "50%",
-
-          background:
-            "radial-gradient(circle, rgba(38,142,255,.2), rgba(12,70,145,.06) 43%, transparent 72%)",
-
-          filter: "none",
-
-          animation:
-            closing
-              ? "none"
-              : "adokvaWelcomePulse 4s ease-in-out infinite",
-        }}
-      />
-
-      <div
-        style={{
-          position: "absolute",
           inset: 0,
 
-          opacity:
-            closing
-              ? 0
-              : 0.7,
+          pointerEvents: "none",
 
-          backgroundImage: `
-            radial-gradient(circle at 12% 18%, white 0 1px, transparent 1.5px),
-            radial-gradient(circle at 78% 22%, white 0 1px, transparent 1.5px),
-            radial-gradient(circle at 36% 72%, white 0 1px, transparent 1.5px),
-            radial-gradient(circle at 88% 78%, white 0 1px, transparent 1.5px),
-            radial-gradient(circle at 62% 48%, white 0 1px, transparent 1.5px),
-            radial-gradient(circle at 20% 88%, white 0 1px, transparent 1.5px)
-          `,
-
-          backgroundSize:
-            "210px 210px, 260px 260px, 190px 190px, 310px 310px, 230px 230px, 280px 280px",
-
-          animation:
-            closing
-              ? "none"
-              : "adokvaStarsMove 22s linear infinite",
-
-          transition:
-            `opacity 360ms ease`,
+          background:
+            "radial-gradient(circle at 74% 48%, transparent 0%, transparent 24%, rgba(0,0,0,.08) 48%, rgba(0,0,0,.34) 100%)",
         }}
       />
 
@@ -137,14 +92,18 @@ export default function WelcomeScreen({
 
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
+          alignItems: "flex-start",
+          justifyContent: "center",
 
           width: "100%",
-          maxWidth: 900,
+          height: "100%",
 
-          padding: 24,
+          maxWidth: 720,
 
-          textAlign: "center",
+          padding:
+            "clamp(28px, 6vw, 96px)",
+
+          textAlign: "left",
 
           opacity:
             closing
@@ -153,33 +112,45 @@ export default function WelcomeScreen({
 
           transform:
             closing
-              ? "translateY(-10px) scale(.99)"
-              : "translateY(0) scale(1)",
+              ? "translate3d(-45px, 0, 0)"
+              : "translate3d(0, 0, 0)",
+
+          filter:
+            closing
+              ? "blur(8px)"
+              : "blur(0)",
 
           transition:
             `
-              opacity 320ms ease,
-              transform 500ms cubic-bezier(.22,1,.36,1)
+              opacity 420ms ease,
+              transform 800ms cubic-bezier(.22,1,.36,1),
+              filter 520ms ease
             `,
 
           willChange:
-            "opacity, transform",
+            "opacity, transform, filter",
         }}
       >
         <div
           style={{
             fontSize:
-              "clamp(48px, 9vw, 104px)",
+              "clamp(52px, 8vw, 112px)",
 
             fontWeight: 800,
 
+            lineHeight: 0.92,
+
             letterSpacing:
-              "clamp(5px, 1.5vw, 15px)",
+              "clamp(5px, 1.3vw, 15px)",
 
             color: "#ffffff",
 
             textShadow:
-              "0 0 18px rgba(116,199,255,.65), 0 0 55px rgba(30,132,255,.35)",
+              `
+                0 0 18px rgba(116,199,255,.55),
+                0 0 55px rgba(30,132,255,.25),
+                0 5px 35px rgba(0,0,0,.95)
+              `,
           }}
         >
           ADOKVA
@@ -187,32 +158,36 @@ export default function WelcomeScreen({
 
         <div
           style={{
-            width: 120,
+            width:
+              "clamp(90px, 10vw, 145px)",
+
             height: 2,
 
-            marginTop: 18,
+            marginTop: 24,
 
             background:
-              "linear-gradient(90deg, transparent, #71c4ff, transparent)",
+              "linear-gradient(90deg, #71c4ff, rgba(113,196,255,.2), transparent)",
 
             boxShadow:
-              "0 0 18px rgba(81,181,255,.8)",
+              "0 0 18px rgba(81,181,255,.7)",
           }}
         />
 
         <div
           style={{
-            marginTop: 25,
+            marginTop: 28,
 
             fontSize:
-              "clamp(22px, 3vw, 34px)",
+              "clamp(24px, 3vw, 38px)",
 
-            letterSpacing: 2,
+            fontWeight: 500,
 
-            color: "#8fd3ff",
+            letterSpacing: 1.5,
+
+            color: "#a6ddff",
 
             textShadow:
-              "0 0 22px rgba(88,190,255,.45)",
+              "0 0 24px rgba(88,190,255,.35)",
           }}
         >
           Ты не один.
@@ -220,17 +195,20 @@ export default function WelcomeScreen({
 
         <div
           style={{
-            maxWidth: 580,
+            maxWidth: 520,
 
             marginTop: 20,
 
             fontSize:
-              "clamp(14px, 1.5vw, 18px)",
+              "clamp(15px, 1.5vw, 19px)",
 
             lineHeight: 1.7,
 
             color:
-              "rgba(220,238,255,.72)",
+              "rgba(225,240,255,.78)",
+
+            textShadow:
+              "0 3px 18px rgba(0,0,0,.9)",
           }}
         >
           Найди связь с местом,
@@ -244,17 +222,21 @@ export default function WelcomeScreen({
           disabled={closing}
           onClick={startJourney}
           style={{
-            marginTop: 54,
+            position: "relative",
+
+            marginTop: 46,
 
             minWidth: 270,
 
             padding:
               "18px 36px",
 
+            overflow: "hidden",
+
             borderRadius: 999,
 
             border:
-              "1px solid rgba(151,216,255,.55)",
+              "1px solid rgba(151,216,255,.58)",
 
             cursor:
               closing
@@ -262,30 +244,42 @@ export default function WelcomeScreen({
                 : "pointer",
 
             background:
-              "linear-gradient(135deg, rgba(12,102,232,.98), rgba(42,184,255,.98))",
+              "linear-gradient(135deg, rgba(9,82,195,.96), rgba(35,174,245,.96))",
 
             color: "#ffffff",
 
             fontSize: 17,
             fontWeight: 700,
 
-            letterSpacing: 0.5,
+            letterSpacing: 0.6,
 
             boxShadow:
-              "0 0 28px rgba(22,139,255,.42), inset 0 1px rgba(255,255,255,.35)",
+              `
+                0 0 32px rgba(22,139,255,.38),
+                inset 0 1px rgba(255,255,255,.35)
+              `,
 
             animation:
               closing
                 ? "none"
-                : "adokvaButtonBreath 2.4s ease-in-out infinite",
+                : "adokvaLaunchButton 2.8s ease-in-out infinite",
 
             opacity:
               closing
                 ? 0
                 : 1,
 
+            transform:
+              closing
+                ? "scale(.96)"
+                : "scale(1)",
+
             transition:
-              "transform .25s ease, box-shadow .25s ease, opacity .2s ease",
+              `
+                opacity 250ms ease,
+                transform 300ms ease,
+                box-shadow 250ms ease
+              `,
           }}
         >
           Начать путешествие
@@ -293,39 +287,57 @@ export default function WelcomeScreen({
         </button>
       </div>
 
+      <div
+        style={{
+          position: "absolute",
+
+          left:
+            "clamp(28px, 6vw, 96px)",
+          bottom:
+            "clamp(20px, 4vh, 42px)",
+
+          fontSize: 11,
+          fontWeight: 500,
+
+          letterSpacing: 3,
+
+          color:
+            "rgba(178,216,242,.45)",
+
+          opacity:
+            closing
+              ? 0
+              : 1,
+
+          transition:
+            "opacity 250ms ease",
+        }}
+      >
+        PLANETARY CONNECTION SYSTEM
+      </div>
+
       <style>
         {`
-          @keyframes adokvaWelcomePulse {
-            0%, 100% {
-              transform: scale(.92);
-              opacity: .65;
-            }
-
-            50% {
-              transform: scale(1.08);
-              opacity: 1;
-            }
-          }
-
-          @keyframes adokvaStarsMove {
-            from {
-              transform:
-                translate3d(0, 0, 0);
-            }
-
-            to {
-              transform:
-                translate3d(-28px, 18px, 0);
-            }
-          }
-
-          @keyframes adokvaButtonBreath {
+          @keyframes adokvaLaunchButton {
             0%, 100% {
               transform: scale(1);
+              box-shadow:
+                0 0 26px rgba(22,139,255,.34),
+                inset 0 1px rgba(255,255,255,.35);
             }
 
             50% {
               transform: scale(1.025);
+              box-shadow:
+                0 0 42px rgba(22,139,255,.52),
+                inset 0 1px rgba(255,255,255,.42);
+            }
+          }
+
+          @media (max-width: 720px) {
+            button {
+              -webkit-tap-highlight-color:
+                transparent;
             }
           }
         `}

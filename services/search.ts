@@ -285,6 +285,11 @@ const WORLD_ALIASES: Record<
     "красная планета",
     "планета марс",
   ],
+  mercury: [
+  "mercury",
+  "меркурий",
+],
+
 };
 
 function normalizeSearchText(

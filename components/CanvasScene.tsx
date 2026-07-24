@@ -25,6 +25,7 @@ import CameraIntro from "./CameraIntro";
 import FlightCamera from "./FlightCamera";
 import FocusOrbitControls from "./FocusOrbitControls";
 import Globe from "./Globe";
+import LabelsLayer from "./LabelsLayer";
 import Mars from "./Mars";
 import Mercury from "./Mercury";
 import Moon, {
@@ -231,6 +232,10 @@ export default function CanvasScene({
           }
         />
       </Suspense>
+
+      <LabelsLayer
+        visible={solarSystemView}
+      />
 
       <CameraIntro
         active={introStarted}

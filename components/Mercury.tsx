@@ -16,6 +16,8 @@ import {
 
 import * as THREE from "three";
 
+import WorldObject from "./WorldObject";
+
 import {
   MERCURY_CURRENT_POSITION,
   MERCURY_INITIAL_ANGLE,
@@ -37,7 +39,10 @@ const ORBIT_SEGMENTS = 256;
 export default function Mercury({
   onSelect,
 }: Props) {
-  const mercuryRef =
+  const mercuryGroupRef =
+    useRef<THREE.Group>(null);
+
+  const mercuryMeshRef =
     useRef<THREE.Mesh>(null);
 
   const orbitAngle =
@@ -91,10 +96,16 @@ export default function Mercury({
     }, []);
 
   useFrame((_, delta) => {
-    const mercury =
-      mercuryRef.current;
+    const mercuryGroup =
+      mercuryGroupRef.current;
 
-    if (!mercury) {
+    const mercuryMesh =
+      mercuryMeshRef.current;
+
+    if (
+      !mercuryGroup ||
+      !mercuryMesh
+    ) {
       return;
     }
 
@@ -123,7 +134,7 @@ export default function Mercury({
       ) *
         MERCURY_ORBIT_RADIUS;
 
-    mercury.position.set(
+    mercuryGroup.position.set(
       positionX,
       positionY,
       positionZ
@@ -135,7 +146,7 @@ export default function Mercury({
       positionZ
     );
 
-    mercury.rotation.y +=
+    mercuryMesh.rotation.y +=
       safeDelta *
       MERCURY_ROTATION_SPEED;
   }, -1);
@@ -152,48 +163,56 @@ export default function Mercury({
         depthWrite={false}
       />
 
-      <mesh
-        ref={mercuryRef}
-        position={
-          MERCURY_CURRENT_POSITION
-        }
-        castShadow
-        receiveShadow
-        onClick={(event) => {
-          event.stopPropagation();
-          onSelect?.();
-        }}
-        onPointerOver={(
-          event
-        ) => {
-          event.stopPropagation();
-
-          document.body.style.cursor =
-            "pointer";
-        }}
-        onPointerOut={() => {
-          document.body.style.cursor =
-            "default";
-        }}
+      <group
+        ref={mercuryGroupRef}
+        position={[
+          MERCURY_CURRENT_POSITION.x,
+          MERCURY_CURRENT_POSITION.y,
+          MERCURY_CURRENT_POSITION.z,
+        ]}
       >
-        <sphereGeometry
-          args={[
-            MERCURY_RADIUS,
-            128,
-            128,
-          ]}
-        />
+        <WorldObject id="mercury">
+          <mesh
+            ref={mercuryMeshRef}
+            castShadow
+            receiveShadow
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelect?.();
+            }}
+            onPointerOver={(
+              event
+            ) => {
+              event.stopPropagation();
 
-        <meshStandardMaterial
-          map={mercuryTexture}
-          bumpMap={
-            mercuryTexture
-          }
-          bumpScale={0.025}
-          roughness={0.92}
-          metalness={0.02}
-        />
-      </mesh>
+              document.body.style.cursor =
+                "pointer";
+            }}
+            onPointerOut={() => {
+              document.body.style.cursor =
+                "default";
+            }}
+          >
+            <sphereGeometry
+              args={[
+                MERCURY_RADIUS,
+                128,
+                128,
+              ]}
+            />
+
+            <meshStandardMaterial
+              map={mercuryTexture}
+              bumpMap={
+                mercuryTexture
+              }
+              bumpScale={0.025}
+              roughness={0.92}
+              metalness={0.02}
+            />
+          </mesh>
+        </WorldObject>
+      </group>
     </>
   );
 }

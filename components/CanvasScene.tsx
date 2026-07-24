@@ -28,7 +28,7 @@ import Globe from "./Globe";
 import Mars from "./Mars";
 import Mercury from "./Mercury";
 import Moon, {
-  getMoonPosition,
+  MOON_POSITION,
 } from "./Moon";
 import SatelliteManager from "./SatelliteManager";
 import SpaceBackground from "./SpaceBackground";
@@ -54,15 +54,14 @@ type Props = {
 
   selectedWorld: SelectedWorld;
 
+  solarSystemView: boolean;
+
   onSelectWorld: (
     world: SelectedWorld
   ) => void;
 
   onIntroComplete: () => void;
 };
-
-const MOON_POSITION =
-  getMoonPosition();
 
 function SecondarySpaceObjects({
   onSelectWorld,
@@ -109,6 +108,7 @@ export default function CanvasScene({
   introComplete,
   selectedLocation,
   selectedWorld,
+  solarSystemView,
   onSelectWorld,
   onIntroComplete,
 }: Props) {
@@ -132,7 +132,8 @@ export default function CanvasScene({
   useEffect(() => {
     if (
       selectedLocation &&
-      !exploringWorld
+      !exploringWorld &&
+      !solarSystemView
     ) {
       return;
     }
@@ -141,6 +142,7 @@ export default function CanvasScene({
   }, [
     exploringWorld,
     selectedLocation,
+    solarSystemView,
   ]);
 
   useEffect(() => {
@@ -211,15 +213,6 @@ export default function CanvasScene({
         color="#fff7e6"
       />
 
-      {/*
-        Основная стартовая сцена.
-
-        Все её элементы могут
-        загружаться независимо,
-        но постобработка теперь
-        работает с первого кадра.
-      */}
-
       <Suspense fallback={null}>
         <SpaceBackground />
       </Suspense>
@@ -231,7 +224,8 @@ export default function CanvasScene({
       <Suspense fallback={null}>
         <Globe
           target={
-            exploringWorld
+            exploringWorld ||
+            solarSystemView
               ? null
               : selectedLocation
           }
@@ -256,17 +250,22 @@ export default function CanvasScene({
           introComplete &&
           !cityFlightActive
         }
+        solarSystemView={
+          solarSystemView
+        }
       />
 
       <FlightCamera
         target={
-          exploringWorld
+          exploringWorld ||
+          solarSystemView
             ? null
             : selectedLocation
         }
         enabled={
           introComplete &&
-          !exploringWorld
+          !exploringWorld &&
+          !solarSystemView
         }
         onFlightStart={() => {
           setCityFlightActive(
@@ -284,20 +283,13 @@ export default function CanvasScene({
         enabled={
           introComplete &&
           !exploringWorld &&
-          !cityFlightActive
+          !cityFlightActive &&
+          !solarSystemView
         }
         selected={Boolean(
           selectedLocation
         )}
       />
-
-      {/*
-        Планеты и спутники всё ещё
-        создаются после интро.
-
-        Они не влияют на первый
-        показ Земли.
-      */}
 
       {secondaryObjectsReady && (
         <Suspense fallback={null}>
@@ -308,18 +300,6 @@ export default function CanvasScene({
           />
         </Suspense>
       )}
-
-      {/*
-        ВАЖНО:
-
-        Постобработка больше не
-        включается через 350 мс.
-
-        Она существует с самого
-        первого кадра, поэтому
-        яркость Земли не должна
-        внезапно переключаться.
-      */}
 
       <EffectComposer>
         <Bloom

@@ -52,6 +52,25 @@ export type SearchResult =
   | CitySearchResult
   | WorldSearchResult;
 
+type SearchLocation = {
+  id: number;
+  city: string;
+  country: string;
+  lat: number;
+  lon: number;
+};
+
+const REQUIRED_LOCATIONS: SearchLocation[] =
+  [
+    {
+      id: -1001,
+      city: "Moscow",
+      country: "Russia",
+      lat: 55.7558,
+      lon: 37.6176,
+    },
+  ];
+
 const CITY_ALIASES: Record<
   string,
   string[]
@@ -63,8 +82,12 @@ const CITY_ALIASES: Record<
 
   Moscow: [
     "москва",
+    "моск",
+    "мос",
     "москве",
     "москвы",
+    "moscow",
+    "moskva",
   ],
 
   London: [
@@ -279,17 +302,18 @@ const WORLD_ALIASES: Record<
     "звезда",
     "солнечная система",
   ],
-    mars: [
+
+  mars: [
     "mars",
     "марс",
     "красная планета",
     "планета марс",
   ],
-  mercury: [
-  "mercury",
-  "меркурий",
-],
 
+  mercury: [
+    "mercury",
+    "меркурий",
+  ],
 };
 
 function normalizeSearchText(
@@ -319,7 +343,9 @@ function includesQuery(
   return normalizeSearchText(
     value
   ).includes(
-    query
+    normalizeSearchText(
+      query
+    )
   );
 }
 
@@ -334,6 +360,46 @@ function aliasesIncludeQuery(
         query
       )
   );
+}
+
+function getSearchLocations():
+  SearchLocation[] {
+  const currentLocations =
+    locations.map(
+      (location) => ({
+        id: location.id,
+        city: location.city,
+        country:
+          location.country,
+        lat: location.lat,
+        lon: location.lon,
+      })
+    );
+
+  const missingLocations =
+    REQUIRED_LOCATIONS.filter(
+      (requiredLocation) =>
+        !currentLocations.some(
+          (location) =>
+            normalizeSearchText(
+              location.city
+            ) ===
+              normalizeSearchText(
+                requiredLocation.city
+              ) &&
+            normalizeSearchText(
+              location.country
+            ) ===
+              normalizeSearchText(
+                requiredLocation.country
+              )
+        )
+    );
+
+  return [
+    ...currentLocations,
+    ...missingLocations,
+  ];
 }
 
 export function searchPeople(
@@ -398,7 +464,7 @@ export function searchCities(
     return [];
   }
 
-  return locations
+  return getSearchLocations()
     .filter((location) => {
       const cityAliases =
         CITY_ALIASES[

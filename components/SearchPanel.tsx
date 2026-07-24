@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  useEffect,
   useMemo,
+  useRef,
   useState,
 } from "react";
 
@@ -69,6 +71,16 @@ export default function SearchPanel({
     setQuery,
   ] = useState("");
 
+  const [
+    activeIndex,
+    setActiveIndex,
+  ] = useState(-1);
+
+  const resultRefs =
+    useRef<
+      Array<HTMLButtonElement | null>
+    >([]);
+
   const results =
     useMemo(() => {
       if (!query.trim()) {
@@ -79,6 +91,108 @@ export default function SearchPanel({
         query
       );
     }, [query]);
+
+  useEffect(() => {
+    setActiveIndex(
+      results.length > 0
+        ? 0
+        : -1
+    );
+  }, [results]);
+
+  useEffect(() => {
+    if (activeIndex < 0) {
+      return;
+    }
+
+    resultRefs.current[
+      activeIndex
+    ]?.scrollIntoView({
+      block: "nearest",
+    });
+  }, [activeIndex]);
+
+  function selectResult(
+    result:
+      SelectedSearchResult
+  ) {
+    onSelect?.(result);
+    setQuery("");
+    setActiveIndex(-1);
+  }
+
+  function handleKeyDown(
+    event:
+      React.KeyboardEvent<HTMLInputElement>
+  ) {
+    if (
+      results.length === 0
+    ) {
+      if (
+        event.key ===
+        "Escape"
+      ) {
+        setQuery("");
+      }
+
+      return;
+    }
+
+    if (
+      event.key ===
+      "ArrowDown"
+    ) {
+      event.preventDefault();
+
+      setActiveIndex(
+        (current) =>
+          current >=
+          results.length - 1
+            ? 0
+            : current + 1
+      );
+
+      return;
+    }
+
+    if (
+      event.key ===
+      "ArrowUp"
+    ) {
+      event.preventDefault();
+
+      setActiveIndex(
+        (current) =>
+          current <= 0
+            ? results.length - 1
+            : current - 1
+      );
+
+      return;
+    }
+
+    if (
+      event.key ===
+        "Enter" &&
+      activeIndex >= 0
+    ) {
+      event.preventDefault();
+
+      selectResult(
+        results[activeIndex]
+      );
+
+      return;
+    }
+
+    if (
+      event.key ===
+      "Escape"
+    ) {
+      setQuery("");
+      setActiveIndex(-1);
+    }
+  }
 
   return (
     <div
@@ -143,6 +257,9 @@ export default function SearchPanel({
               event.target.value
             );
           }}
+          onKeyDown={
+            handleKeyDown
+          }
           placeholder="Мир, человек, город или страна..."
           style={{
             flex: 1,
@@ -159,6 +276,46 @@ export default function SearchPanel({
             fontSize: 18,
           }}
         />
+
+        {query.length > 0 && (
+          <button
+            type="button"
+            aria-label="Очистить поиск"
+            onClick={() => {
+              setQuery("");
+              setActiveIndex(-1);
+            }}
+            style={{
+              display: "flex",
+              alignItems:
+                "center",
+              justifyContent:
+                "center",
+
+              width: 30,
+              height: 30,
+
+              flexShrink: 0,
+
+              border: "none",
+              borderRadius:
+                "50%",
+
+              background:
+                "rgba(255,255,255,.08)",
+
+              color:
+                "rgba(235,242,255,.72)",
+
+              cursor:
+                "pointer",
+
+              fontSize: 16,
+            }}
+          >
+            ×
+          </button>
+        )}
       </div>
 
       {!query.trim() && (
@@ -183,20 +340,62 @@ export default function SearchPanel({
         </div>
       )}
 
+      {query.trim() !== "" &&
+        results.length > 0 && (
+          <div
+            style={{
+              display: "flex",
+
+              alignItems:
+                "center",
+
+              justifyContent:
+                "space-between",
+
+              gap: 12,
+
+              marginTop: 16,
+
+              padding:
+                "0 6px",
+
+              color:
+                "rgba(225,235,250,.48)",
+
+              fontSize: 12,
+            }}
+          >
+            <span>
+              Найдено:{" "}
+              {results.length}
+            </span>
+
+            <span>
+              ↑ ↓ выбор · Enter
+            </span>
+          </div>
+        )}
+
       <div
         style={{
           marginTop:
             results.length
-              ? 18
+              ? 6
               : 0,
 
           maxHeight: 430,
 
           overflowY: "auto",
+
+          scrollbarWidth:
+            "thin",
         }}
       >
         {results.map(
-          (result) => {
+          (
+            result,
+            index
+          ) => {
             const isCity =
               result.type ===
               "city";
@@ -205,26 +404,52 @@ export default function SearchPanel({
               result.type ===
               "world";
 
+            const isActive =
+              index ===
+              activeIndex;
+
             const border =
-              isWorld
-                ? "1px solid rgba(178,127,255,.24)"
-                : isCity
-                  ? "1px solid rgba(79,181,255,.16)"
-                  : "1px solid rgba(255,255,255,.06)";
+              isActive
+                ? isWorld
+                  ? "1px solid rgba(205,167,255,.58)"
+                  : isCity
+                    ? "1px solid rgba(107,199,255,.48)"
+                    : "1px solid rgba(118,177,255,.42)"
+                : isWorld
+                  ? "1px solid rgba(178,127,255,.24)"
+                  : isCity
+                    ? "1px solid rgba(79,181,255,.16)"
+                    : "1px solid rgba(255,255,255,.06)";
 
             const background =
-              isWorld
-                ? "rgba(115,72,196,.12)"
-                : isCity
-                  ? "rgba(30,118,196,.09)"
-                  : "rgba(255,255,255,.045)";
+              isActive
+                ? isWorld
+                  ? "rgba(140,91,230,.22)"
+                  : isCity
+                    ? "rgba(38,151,240,.18)"
+                    : "rgba(52,130,255,.14)"
+                : isWorld
+                  ? "rgba(115,72,196,.12)"
+                  : isCity
+                    ? "rgba(30,118,196,.09)"
+                    : "rgba(255,255,255,.045)";
 
             return (
               <button
+                ref={(element) => {
+                  resultRefs.current[
+                    index
+                  ] = element;
+                }}
                 type="button"
                 key={`${result.type}-${result.id}`}
+                onMouseEnter={() => {
+                  setActiveIndex(
+                    index
+                  );
+                }}
                 onClick={() => {
-                  onSelect?.(
+                  selectResult(
                     result
                   );
                 }}
@@ -251,54 +476,13 @@ export default function SearchPanel({
 
                   color: "white",
 
+                  transform:
+                    isActive
+                      ? "translateX(5px)"
+                      : "translateX(0)",
+
                   transition:
                     "transform .2s ease, background .2s ease, border-color .2s ease",
-                }}
-                onMouseEnter={(
-                  event
-                ) => {
-                  event.currentTarget
-                    .style
-                    .transform =
-                    "translateX(5px)";
-
-                  event.currentTarget
-                    .style
-                    .background =
-                    isWorld
-                      ? "rgba(140,91,230,.22)"
-                      : isCity
-                        ? "rgba(38,151,240,.18)"
-                        : "rgba(52,130,255,.14)";
-
-                  event.currentTarget
-                    .style
-                    .borderColor =
-                    isWorld
-                      ? "rgba(190,145,255,.42)"
-                      : "rgba(93,177,255,.28)";
-                }}
-                onMouseLeave={(
-                  event
-                ) => {
-                  event.currentTarget
-                    .style
-                    .transform =
-                    "translateX(0)";
-
-                  event.currentTarget
-                    .style
-                    .background =
-                    background;
-
-                  event.currentTarget
-                    .style
-                    .borderColor =
-                    isWorld
-                      ? "rgba(178,127,255,.24)"
-                      : isCity
-                        ? "rgba(79,181,255,.16)"
-                        : "rgba(255,255,255,.06)";
                 }}
               >
                 <div
@@ -398,7 +582,7 @@ export default function SearchPanel({
             <div
               style={{
                 padding:
-                  "22px 8px 6px",
+                  "24px 8px 8px",
 
                 textAlign:
                   "center",
@@ -407,6 +591,15 @@ export default function SearchPanel({
                   "rgba(225,235,250,.55)",
               }}
             >
+              <div
+                style={{
+                  fontSize: 28,
+                  marginBottom: 8,
+                }}
+              >
+                🌌
+              </div>
+
               Ничего не найдено
             </div>
           )}

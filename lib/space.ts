@@ -18,6 +18,10 @@ export const MARS_POSITION = [
   -4.2,
 ] as const;
 
+/*
+  MERCURY
+*/
+
 export const MERCURY_ORBIT_RADIUS =
   Math.hypot(
     MERCURY_POSITION[0] -
@@ -46,4 +50,38 @@ export const MERCURY_CURRENT_POSITION =
     MERCURY_POSITION[0],
     MERCURY_POSITION[1],
     MERCURY_POSITION[2]
+  );
+
+/*
+  MARS
+*/
+
+export const MARS_ORBIT_RADIUS =
+  Math.hypot(
+    MARS_POSITION[0] -
+      SUN_POSITION[0],
+    MARS_POSITION[2] -
+      SUN_POSITION[2]
+  );
+
+export const MARS_ORBIT_HEIGHT =
+  MARS_POSITION[1] -
+  SUN_POSITION[1];
+
+export const MARS_INITIAL_ANGLE =
+  Math.atan2(
+    MARS_POSITION[2] -
+      SUN_POSITION[2],
+    MARS_POSITION[0] -
+      SUN_POSITION[0]
+  );
+
+export const MARS_ORBIT_SPEED =
+  0.035;
+
+export const MARS_CURRENT_POSITION =
+  new THREE.Vector3(
+    MARS_POSITION[0],
+    MARS_POSITION[1],
+    MARS_POSITION[2]
   );

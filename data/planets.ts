@@ -1,6 +1,11 @@
 import * as THREE from "three";
 
 import {
+  MARS_CURRENT_POSITION,
+  MARS_INITIAL_ANGLE,
+  MARS_ORBIT_HEIGHT,
+  MARS_ORBIT_RADIUS,
+  MARS_ORBIT_SPEED,
   MARS_POSITION,
   MERCURY_CURRENT_POSITION,
   MERCURY_INITIAL_ANGLE,
@@ -191,11 +196,31 @@ export const MARS_CONFIG:
     MARS_POSITION,
 
   currentPosition:
-    new THREE.Vector3(
-      MARS_POSITION[0],
-      MARS_POSITION[1],
-      MARS_POSITION[2]
-    ),
+  MARS_CURRENT_POSITION,
+
+orbit: {
+  center: SUN_POSITION,
+
+  radius:
+    MARS_ORBIT_RADIUS,
+
+  height:
+    MARS_ORBIT_HEIGHT,
+
+  speed:
+    MARS_ORBIT_SPEED,
+
+  initialAngle:
+    MARS_INITIAL_ANGLE,
+
+  segments: 256,
+
+  color: "#ff7b55",
+
+  lineWidth: 0.75,
+
+  opacity: 0.28,
+},
 
   texture: {
     wrapS:

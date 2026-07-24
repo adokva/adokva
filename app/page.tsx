@@ -76,6 +76,11 @@ export default function Home() {
     );
 
   const [
+    solarSystemView,
+    setSolarSystemView,
+  ] = useState(false);
+
+  const [
     worldPanelVisible,
     setWorldPanelVisible,
   ] = useState(false);
@@ -140,6 +145,7 @@ export default function Home() {
     setSelectedResult(null);
     setSearchOpen(false);
     setCompatriotOpen(false);
+    setSolarSystemView(false);
 
     setSelectedWorld(
       (currentWorld) => {
@@ -202,6 +208,9 @@ export default function Home() {
         selectedWorld={
           selectedWorld
         }
+        solarSystemView={
+          solarSystemView
+        }
         onSelectWorld={
           handleSelectWorld
         }
@@ -212,8 +221,86 @@ export default function Home() {
         }}
       />
 
+      {introComplete && (
+        <button
+          type="button"
+          onClick={() => {
+            setSearchOpen(false);
+            setCompatriotOpen(false);
+            setCompatriotSelection(
+              null
+            );
+            setSelectedResult(null);
+            setSelectedWorld(
+              "earth"
+            );
+            setSolarSystemView(
+              (current) =>
+                !current
+            );
+          }}
+          style={{
+            position: "fixed",
+            left: "50%",
+            bottom: 24,
+            zIndex: 880,
+            transform:
+              "translateX(-50%)",
+            display: "flex",
+            alignItems: "center",
+            gap: 10,
+            padding:
+              "13px 20px",
+            borderRadius: 999,
+            border: solarSystemView
+              ? "1px solid rgba(155,218,255,.7)"
+              : "1px solid rgba(126,190,255,.28)",
+            background: solarSystemView
+              ? "linear-gradient(135deg, rgba(29,135,220,.92), rgba(108,68,202,.92))"
+              : "linear-gradient(135deg, rgba(10,24,48,.78), rgba(37,28,78,.78))",
+            backdropFilter:
+              "blur(20px)",
+            WebkitBackdropFilter:
+              "blur(20px)",
+            boxShadow: solarSystemView
+              ? "0 0 34px rgba(79,167,255,.42), 0 14px 40px rgba(0,0,0,.35)"
+              : "0 14px 40px rgba(0,0,0,.38)",
+            color: "white",
+            cursor: "pointer",
+            fontSize: 13,
+            fontWeight: 800,
+            letterSpacing: 0.7,
+            transition:
+              "transform .2s ease, box-shadow .2s ease, background .2s ease",
+          }}
+          onMouseEnter={(event) => {
+            event.currentTarget.style.transform =
+              "translateX(-50%) translateY(-2px) scale(1.02)";
+          }}
+          onMouseLeave={(event) => {
+            event.currentTarget.style.transform =
+              "translateX(-50%) translateY(0) scale(1)";
+          }}
+        >
+          <span
+            style={{
+              fontSize: 18,
+            }}
+          >
+            {solarSystemView
+              ? "🌍"
+              : "🌌"}
+          </span>
+
+          {solarSystemView
+            ? "ВЕРНУТЬСЯ К ЗЕМЛЕ"
+            : "SOLAR SYSTEM VIEW"}
+        </button>
+      )}
+
       {introComplete &&
-        !exploringWorld && (
+        !exploringWorld &&
+        !solarSystemView && (
           <MenuButton
             onClick={() => {
               setCompatriotOpen(
@@ -233,7 +320,8 @@ export default function Home() {
         )}
 
       {introComplete &&
-        !exploringWorld && (
+        !exploringWorld &&
+        !solarSystemView && (
           <button
             type="button"
             onClick={() => {
@@ -374,7 +462,8 @@ export default function Home() {
 
       {introComplete &&
         searchOpen &&
-        !exploringWorld && (
+        !exploringWorld &&
+        !solarSystemView && (
           <div
             style={{
               position:
@@ -418,7 +507,8 @@ export default function Home() {
 
       {introComplete &&
         compatriotOpen &&
-        !exploringWorld && (
+        !exploringWorld &&
+        !solarSystemView && (
           <div
             style={{
               position:
@@ -699,7 +789,8 @@ export default function Home() {
         )}
 
       {selectedPerson &&
-        !exploringWorld && (
+        !exploringWorld &&
+        !solarSystemView && (
           <PersonCard
             open={true}
             name={

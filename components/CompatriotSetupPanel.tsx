@@ -1,10 +1,21 @@
 "use client";
 
 import {
-  FormEvent,
   useMemo,
   useState,
 } from "react";
+
+import type {
+  FormEvent,
+} from "react";
+
+import {
+  searchCities,
+} from "../services/search";
+
+import type {
+  CitySearchResult,
+} from "../services/search";
 
 export type CompatriotSelection = {
   birthWorldId: string;
@@ -124,6 +135,137 @@ const labelStyle = {
   letterSpacing: 0.2,
 };
 
+type PlaceSuggestionsProps = {
+  results: CitySearchResult[];
+  visible: boolean;
+
+  onSelect: (
+    city: CitySearchResult
+  ) => void;
+};
+
+function PlaceSuggestions({
+  results,
+  visible,
+  onSelect,
+}: PlaceSuggestionsProps) {
+  if (
+    !visible ||
+    results.length === 0
+  ) {
+    return null;
+  }
+
+  return (
+    <div
+      style={{
+        position: "absolute",
+
+        top: "calc(100% + 8px)",
+        left: 0,
+        right: 0,
+
+        zIndex: 50,
+
+        maxHeight: 240,
+        overflowY: "auto",
+
+        padding: 8,
+
+        borderRadius: 18,
+
+        background:
+          "rgba(8,14,28,.98)",
+
+        border:
+          "1px solid rgba(110,180,255,.2)",
+
+        boxShadow:
+          "0 20px 50px rgba(0,0,0,.55)",
+
+        backdropFilter:
+          "blur(24px)",
+
+        WebkitBackdropFilter:
+          "blur(24px)",
+      }}
+    >
+      {results.map(
+        (city) => (
+          <button
+            key={city.id}
+            type="button"
+            onMouseDown={(
+              event
+            ) => {
+              event.preventDefault();
+            }}
+            onClick={() => {
+              onSelect(city);
+            }}
+            style={{
+              display: "block",
+
+              width: "100%",
+
+              padding:
+                "12px 13px",
+
+              border: "none",
+              borderRadius: 13,
+
+              cursor: "pointer",
+
+              textAlign: "left",
+
+              background:
+                "transparent",
+
+              color: "white",
+            }}
+            onMouseEnter={(
+              event
+            ) => {
+              event.currentTarget
+                .style.background =
+                "rgba(65,145,255,.16)";
+            }}
+            onMouseLeave={(
+              event
+            ) => {
+              event.currentTarget
+                .style.background =
+                "transparent";
+            }}
+          >
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 750,
+              }}
+            >
+              🏙️ {city.city}
+            </div>
+
+            <div
+              style={{
+                marginTop: 4,
+
+                color:
+                  "rgba(215,230,250,.57)",
+
+                fontSize: 12,
+              }}
+            >
+              📍 {city.country}
+            </div>
+          </button>
+        )
+      )}
+    </div>
+  );
+}
+
 export default function CompatriotSetupPanel({
   onComplete,
 }: Props) {
@@ -136,6 +278,11 @@ export default function CompatriotSetupPanel({
     birthPlace,
     setBirthPlace,
   ] = useState("");
+
+  const [
+    birthPlaceFocused,
+    setBirthPlaceFocused,
+  ] = useState(false);
 
   const [
     residenceWorldId,
@@ -151,6 +298,11 @@ export default function CompatriotSetupPanel({
     residencePlace,
     setResidencePlace,
   ] = useState("");
+
+  const [
+    residencePlaceFocused,
+    setResidencePlaceFocused,
+  ] = useState(false);
 
   const [
     error,
@@ -178,6 +330,44 @@ export default function CompatriotSetupPanel({
   const residenceIsEarth =
     residenceWorldId ===
     "earth";
+
+  const birthCityResults =
+    useMemo(() => {
+      if (
+        birthWorldId !==
+          "earth" ||
+        birthPlace.trim()
+          .length < 2
+      ) {
+        return [];
+      }
+
+      return searchCities(
+        birthPlace
+      ).slice(0, 6);
+    }, [
+      birthPlace,
+      birthWorldId,
+    ]);
+
+  const residenceCityResults =
+    useMemo(() => {
+      if (
+        residenceWorldId !==
+          "earth" ||
+        residencePlace.trim()
+          .length < 2
+      ) {
+        return [];
+      }
+
+      return searchCities(
+        residencePlace
+      ).slice(0, 6);
+    }, [
+      residencePlace,
+      residenceWorldId,
+    ]);
 
   function handleSubmit(
     event: FormEvent<HTMLFormElement>
@@ -468,6 +658,9 @@ export default function CompatriotSetupPanel({
 
         <div
           style={{
+            position:
+              "relative",
+
             marginTop: 15,
           }}
         >
@@ -485,6 +678,16 @@ export default function CompatriotSetupPanel({
             value={
               birthPlace
             }
+            onFocus={() => {
+              setBirthPlaceFocused(
+                true
+              );
+            }}
+            onBlur={() => {
+              setBirthPlaceFocused(
+                false
+              );
+            }}
             onChange={(
               event
             ) => {
@@ -498,6 +701,26 @@ export default function CompatriotSetupPanel({
             style={
               fieldStyle
             }
+          />
+
+          <PlaceSuggestions
+            visible={
+              birthPlaceFocused
+            }
+            results={
+              birthCityResults
+            }
+            onSelect={(
+              city
+            ) => {
+              setBirthPlace(
+                city.city
+              );
+
+              setBirthPlaceFocused(
+                false
+              );
+            }}
           />
         </div>
       </section>
@@ -627,6 +850,9 @@ export default function CompatriotSetupPanel({
 
         <div
           style={{
+            position:
+              "relative",
+
             marginTop: 15,
           }}
         >
@@ -644,6 +870,16 @@ export default function CompatriotSetupPanel({
             value={
               residencePlace
             }
+            onFocus={() => {
+              setResidencePlaceFocused(
+                true
+              );
+            }}
+            onBlur={() => {
+              setResidencePlaceFocused(
+                false
+              );
+            }}
             onChange={(
               event
             ) => {
@@ -661,6 +897,30 @@ export default function CompatriotSetupPanel({
             style={
               fieldStyle
             }
+          />
+
+          <PlaceSuggestions
+            visible={
+              residencePlaceFocused
+            }
+            results={
+              residenceCityResults
+            }
+            onSelect={(
+              city
+            ) => {
+              setResidencePlace(
+                city.city
+              );
+
+              setResidenceCountry(
+                city.country
+              );
+
+              setResidencePlaceFocused(
+                false
+              );
+            }}
           />
         </div>
       </section>

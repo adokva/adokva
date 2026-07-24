@@ -2,7 +2,6 @@
 
 import {
   useEffect,
-  useMemo,
   useRef,
 } from "react";
 
@@ -81,6 +80,13 @@ export function getMoonPosition(): [
   ];
 }
 
+export const MOON_POSITION:
+  [
+    number,
+    number,
+    number,
+  ] = getMoonPosition();
+
 type Props = {
   onSelect: () => void;
 };
@@ -90,13 +96,6 @@ export default function Moon({
 }: Props) {
   const moon =
     useRef<THREE.Mesh>(null);
-
-  const position =
-    useMemo(
-      () =>
-        getMoonPosition(),
-      []
-    );
 
   const moonTexture =
     useLoader(
@@ -138,12 +137,10 @@ export default function Moon({
 
   return (
     <group
-      position={position}
+      position={
+        MOON_POSITION
+      }
     >
-      {/*
-        Настоящая поверхность Луны.
-      */}
-
       <mesh
         ref={moon}
         rotation={[
@@ -171,10 +168,6 @@ export default function Moon({
         />
       </mesh>
 
-      {/*
-        Очень слабый отражённый край.
-      */}
-
       <mesh
         scale={1.004}
         raycast={() => null}
@@ -195,17 +188,6 @@ export default function Moon({
           side={THREE.BackSide}
         />
       </mesh>
-
-      {/*
-        Невидимая зона нажатия.
-
-        Здесь оставлен только
-        один обработчик нажатия.
-
-        Поэтому Луна больше
-        не получает двойной клик
-        и камера не дёргается.
-      */}
 
       <mesh
         onPointerDown={(

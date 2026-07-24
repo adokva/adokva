@@ -645,7 +645,7 @@ export default function FocusOrbitControls({
       enableZoom
       enableRotate
       minDistance={4.4}
-      maxDistance={12}
+      maxDistance={80}
       rotateSpeed={0.42}
       zoomSpeed={0.68}
       enableDamping

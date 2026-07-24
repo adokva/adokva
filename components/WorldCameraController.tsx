@@ -33,6 +33,8 @@ type Props = {
   ];
 
   enabled: boolean;
+
+  solarSystemView: boolean;
 };
 
 const EARTH_POSITION =
@@ -40,6 +42,8 @@ const EARTH_POSITION =
 
 const EARTH_CAMERA_POSITION =
   new THREE.Vector3(0, 0, 8);
+
+const SOLAR_SYSTEM_DISTANCE = 42;
 
 const MOON_VISUAL_RADIUS = 0.72;
 const SUN_VISUAL_RADIUS = 1.2;
@@ -55,6 +59,8 @@ const EARTH_FLIGHT_DURATION = 2.15;
 const WORLD_FLIGHT_DURATION = 2.75;
 const MARS_FLIGHT_DURATION = 3.4;
 const MERCURY_FLIGHT_DURATION = 3.2;
+const SOLAR_SYSTEM_FLIGHT_DURATION =
+  3.8;
 
 const clamp01 = (
   value: number
@@ -116,6 +122,7 @@ export default function WorldCameraController({
   selectedWorld,
   moonPosition,
   enabled,
+  solarSystemView,
 }: Props) {
   const {
     camera,
@@ -162,12 +169,25 @@ export default function WorldCameraController({
       null
     );
 
+  const previousSolarSystemView =
+    useRef(false);
+
   const selectedWorldRef =
     useRef<SelectedWorld>(
       selectedWorld
     );
 
+  const solarSystemViewRef =
+    useRef(
+      solarSystemView
+    );
+
   const workingPosition =
+    useRef(
+      new THREE.Vector3()
+    );
+
+  const solarSystemDirection =
     useRef(
       new THREE.Vector3()
     );
@@ -211,12 +231,23 @@ export default function WorldCameraController({
       previousWorld.current =
         null;
 
+      previousSolarSystemView.current =
+        false;
+
       return;
     }
 
+    const worldChanged =
+      previousWorld.current !==
+      selectedWorld;
+
+    const solarViewChanged =
+      previousSolarSystemView.current !==
+      solarSystemView;
+
     if (
-      previousWorld.current ===
-      selectedWorld
+      !worldChanged &&
+      !solarViewChanged
     ) {
       return;
     }
@@ -224,8 +255,14 @@ export default function WorldCameraController({
     previousWorld.current =
       selectedWorld;
 
+    previousSolarSystemView.current =
+      solarSystemView;
+
     selectedWorldRef.current =
       selectedWorld;
+
+    solarSystemViewRef.current =
+      solarSystemView;
 
     startPosition.current.copy(
       camera.position
@@ -234,6 +271,43 @@ export default function WorldCameraController({
     startLookTarget.current.copy(
       currentLookTarget.current
     );
+
+    if (solarSystemView) {
+      endLookTarget.current.copy(
+        EARTH_POSITION
+      );
+
+      solarSystemDirection.current
+        .copy(camera.position)
+        .sub(EARTH_POSITION);
+
+      if (
+        solarSystemDirection.current
+          .lengthSq() < 0.0001
+      ) {
+        solarSystemDirection.current.set(
+          0,
+          0,
+          1
+        );
+      }
+
+      solarSystemDirection.current
+        .normalize();
+
+      endPosition.current
+        .copy(
+          solarSystemDirection.current
+        )
+        .multiplyScalar(
+          SOLAR_SYSTEM_DISTANCE
+        );
+
+      elapsed.current = 0;
+      active.current = true;
+
+      return;
+    }
 
     const worldPosition =
       new THREE.Vector3();
@@ -374,6 +448,7 @@ export default function WorldCameraController({
     selectedWorld,
     size.height,
     size.width,
+    solarSystemView,
     sunPosition,
   ]);
 
@@ -385,9 +460,13 @@ export default function WorldCameraController({
     const currentWorld =
       selectedWorldRef.current;
 
+    const viewingSolarSystem =
+      solarSystemViewRef.current;
+
     if (
+      !viewingSolarSystem &&
       currentWorld ===
-      "mercury"
+        "mercury"
     ) {
       endLookTarget.current.copy(
         MERCURY_CURRENT_POSITION
@@ -404,8 +483,9 @@ export default function WorldCameraController({
 
     if (!active.current) {
       if (
+        viewingSolarSystem ||
         currentWorld !==
-        "mercury"
+          "mercury"
       ) {
         return;
       }
@@ -447,7 +527,10 @@ export default function WorldCameraController({
     let duration =
       WORLD_FLIGHT_DURATION;
 
-    if (
+    if (viewingSolarSystem) {
+      duration =
+        SOLAR_SYSTEM_FLIGHT_DURATION;
+    } else if (
       currentWorld === "earth" ||
       currentWorld === null
     ) {
@@ -472,11 +555,16 @@ export default function WorldCameraController({
           duration
       );
 
+    const easedProgress =
+      progress *
+      progress *
+      (3 - 2 * progress);
+
     workingPosition.current
       .lerpVectors(
         startPosition.current,
         endPosition.current,
-        progress
+        easedProgress
       );
 
     camera.position.copy(
@@ -487,7 +575,7 @@ export default function WorldCameraController({
       .lerpVectors(
         startLookTarget.current,
         endLookTarget.current,
-        progress
+        easedProgress
       );
 
     camera.lookAt(
@@ -495,8 +583,9 @@ export default function WorldCameraController({
     );
 
     if (
+      !viewingSolarSystem &&
       currentWorld ===
-      "mercury"
+        "mercury"
     ) {
       previousMercuryPosition.current.copy(
         MERCURY_CURRENT_POSITION

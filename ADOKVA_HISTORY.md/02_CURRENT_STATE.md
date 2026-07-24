@@ -333,3 +333,69 @@
 Именно этот файл считается главным источником информации о текущем состоянии ADOKVA.
 
 Конец документа.
+---
+
+# Current Session Update
+
+Date:
+2026-07-25
+
+## Git Status
+
+Latest checkpoint:
+
+39115af
+
+ADOKVA checkpoint before camera stabilization
+
+
+## Completed
+
+✓ GitHub backup completed
+
+✓ WorldObject architecture added
+
+✓ World registry system added
+
+✓ Solar system labels implemented
+
+✓ Solar view implemented
+
+✓ Planet selection implemented
+
+✓ World information panels implemented
+
+
+## Current Investigation
+
+Camera system stabilization.
+
+Observed behavior:
+
+- Mercury camera tracking works better.
+- Mars feels smoother.
+- Some planets show camera switching or interruption.
+- Possible conflict between multiple camera controllers.
+
+
+## Components under investigation
+
+- CanvasScene.tsx
+- WorldCameraController.tsx
+- SolarOrbitControls.tsx
+- PlanetOrbitControls.tsx
+- FocusOrbitControls.tsx
+
+
+## Development Rule
+
+Do not rewrite camera architecture.
+
+First:
+1. Identify conflict.
+2. Find responsible controller.
+3. Apply minimal correction.
+4. Test.
+5. Commit to GitHub.
+
+---

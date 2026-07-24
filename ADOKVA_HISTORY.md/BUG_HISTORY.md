@@ -89,3 +89,56 @@ Problems = 0.
 - работу приложения в браузере.
 
 Это позволяет обнаруживать проблемы сразу после их появления.
+---
+
+# BUG: Planet camera instability
+
+Date:
+2026-07-25
+
+
+## Description
+
+When selecting planets in Solar View:
+
+Expected:
+
+Camera smoothly approaches selected object and stays focused.
+
+
+Actual:
+
+Some objects:
+- approach correctly;
+- then suddenly switch toward Earth;
+- lose smooth tracking.
+
+
+Mercury:
+
+Works better than other planets.
+
+
+Mars:
+
+Currently feels the smoothest.
+
+
+## Suspected Cause
+
+Multiple camera systems may compete:
+
+- WorldCameraController
+- PlanetOrbitControls
+- SolarOrbitControls
+- FlightCamera
+- FocusOrbitControls
+
+
+## Status
+
+OPEN
+
+Waiting for camera system analysis.
+
+---

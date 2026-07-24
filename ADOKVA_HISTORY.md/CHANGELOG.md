@@ -104,3 +104,26 @@
 - список новых возможностей;
 - список исправлений;
 - список внутренних изменений архитектуры.
+
+---
+
+# v0.11.1
+
+Date:
+2026-07-25
+
+
+Added:
+
+- WorldObject component
+- World registry system
+- Solar Orbit Controls
+- Planet camera experiments
+- Camera architecture checkpoint
+
+
+Git:
+
+39115af
+
+---
